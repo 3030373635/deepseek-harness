@@ -1,0 +1,10 @@
+- id: authentication-token
+  disabled: true
+
+- insert:
+    - id: web-password-login
+      name: dsh-web-login
+      inject: [profileContext, webStartup]
+      config:
+        databasePath: !!js "ctx.profileContext.home + '/auth/users.sqlite'"
+        secureCookies: !!js "ctx.webStartup.tls !== undefined || ctx.webStartup.publicUrl?.startsWith('https://') === true"
