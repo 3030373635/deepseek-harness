@@ -1,7 +1,7 @@
 {
-  "name": "dsh-web-login",
+  "name": "dsh-web-custom",
   "version": "0.1.0",
-  "description": "Local account and image CAPTCHA login for DeepSeek Harness Web",
+  "description": "Local login and interface customization for DeepSeek Harness Web",
   "type": "module",
   "license": "MIT",
   "packageManager": "pnpm@11.28.5",
@@ -16,15 +16,15 @@
     "./package.json": "./package.json"
   },
   "bin": {
-    "dsh-web-login-user": "./lib/create-user.js"
+    "dsh-web-custom-user": "./lib/create-user.js"
   },
-  "files": ["lib", "cordis.patch.yml"],
+  "files": ["lib", "auth.patch.yml", "ui.patch.yml"],
   "engines": {
     "node": ">=24.9.0",
     "dsh": ">=0.2.2-rc.4 <0.3.0"
   },
   "dsh": {
-    "bundle": { "patch": "./cordis.patch.yml" },
+    "bundle": { "patch": ["./auth.patch.yml", "./ui.patch.yml"] },
     "client": {
       "platform": "web",
       "inject": [
