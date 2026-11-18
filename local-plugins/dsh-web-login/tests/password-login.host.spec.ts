@@ -105,4 +105,19 @@ it('consumes a CAPTCHA on the first attempt and admits only the signed session c
   expect(await (await fetch(`${origin}/`, { headers: { cookie } })).text()).toBe('app')
   expect((await fetch(`${origin}/private`, { headers: { cookie } })).status).toBe(200)
   expect((await fetch(`${origin}/private`, { headers: { cookie: cookie + 'tampered' } })).status).toBe(401)
+
+  const current = `${origin}/auth/sessions/current`
+  expect((await fetch(current)).status).toBe(401)
+  expect((await fetch(current, { headers: { cookie: cookie + 'tampered' } })).status).toBe(401)
+  const profile = await fetch(current, { headers: { cookie } })
+  expect(profile.status).toBe(200)
+  expect(profile.headers.get('cache-control')).toBe('no-store')
+  expect(await profile.json()).toEqual({ username: 'operator' })
+
+  const crossOrigin = await fetch(current, { method: 'DELETE', headers: { cookie, origin: 'https://example.invalid' } })
+  expect(crossOrigin.status).toBe(403)
+  expect(crossOrigin.headers.get('set-cookie')).toBeNull()
+  const signOut = await fetch(current, { method: 'DELETE', headers: { cookie, origin } })
+  expect(signOut.status).toBe(204)
+  expect(signOut.headers.get('set-cookie')).toBe(`${cookie.split('=')[0]}=; Path=/; Max-Age=0; HttpOnly; SameSite=Strict`)
 })
