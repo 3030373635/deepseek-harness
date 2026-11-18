@@ -1,7 +1,13 @@
 - id: authentication-token
   disabled: true
 
-# The local login owns the Web account UI. DeepSeek notifications depend on the original account UI.
+# Stop the original login service from releasing saved account grants to models and Web tools.
+- id: deepseek-account
+  disabled: true
+- id: llm-deepseek-account
+  disabled: true
+
+# DeepSeek notifications depend on the original account UI.
 - id: ui-settings-account
   disabled: true
 - id: ui-account-notifications
