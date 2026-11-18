@@ -1,6 +1,12 @@
 - id: authentication-token
   disabled: true
 
+# The local login owns the Web account UI. DeepSeek notifications depend on the original account UI.
+- id: ui-settings-account
+  disabled: true
+- id: ui-account-notifications
+  disabled: true
+
 - insert:
     - id: web-password-login
       name: dsh-web-login
