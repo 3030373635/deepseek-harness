@@ -25,7 +25,9 @@ pnpm dsh web
 
 如果 `web` profile 尚未初始化，安装前先执行 `pnpm dsh web --dump-config`。安装会写入 Web profile 及其依赖清单。插件组合包停用默认的启动 Token 认证并挂载密码认证，之后直接启动 Web 即可。
 
-登录后，Web 左下角显示本地用户名和首字母头像。点击头像可打开设置或退出当前浏览器的本地会话。插件停用 Web 中的 DeepSeek 登录界面、「账号与余额」设置页及账号通知。模型设置支持配置 API Key。
+登录后，Web 左下角显示本地用户名和首字母头像。点击头像可打开设置或退出当前浏览器的本地会话。插件停用 Web 中的 DeepSeek 登录服务、账号模型路由、「账号与余额」设置页及账号通知。
+
+此 Web profile 不使用已保存的 DeepSeek 账号授权。模型设置支持使用 API Key。如果旧会话选中了 DeepSeek 账号模型，请在模型选择器中换用已配置的模型。
 
 从本地目录链接安装后，更新插件时重新运行 `pnpm -C local-plugins/dsh-web-login run build` 并重启 Web。
 
