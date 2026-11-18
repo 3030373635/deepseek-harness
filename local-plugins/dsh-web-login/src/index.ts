@@ -7,6 +7,7 @@ import type {} from '@deepseek-ai/dsh-host-webserver'
 import z from '@deepseek-ai/schemastery'
 import { createCaptchaCode, renderCaptcha } from './captcha.ts'
 import { renderLoginPage } from './page.ts'
+import { currentSessionPath, loginPath } from './routes.ts'
 import { initializeSessionKey, issueSession, readSession } from './session.ts'
 import { openUsers, verifyUser } from './users.ts'
 
@@ -42,7 +43,6 @@ export const Config: z<PasswordLoginConfig> = z.object({
   concurrentPasswordChecks: z.natural().min(1).default(4),
 })
 
-const loginPath = '/login'
 const sessionPath = '/auth/sessions'
 const captchaPath = '/auth/challenges'
 const maxFormBytes = 8192
@@ -154,16 +154,26 @@ export async function apply(ctx: Context, config: PasswordLoginConfig): Promise<
   }, 'host-web-password: user database')
   /** @returns whether the provider may still sign a session after an asynchronous operation. */
   const canSignIn = (): boolean => active
-  const userById = users.prepare('SELECT id FROM users WHERE id = ?')
+  const userById = users.prepare('SELECT username FROM users WHERE id = ?')
+  /**
+   * Read the local account for this request's verified session.
+   * @param request - request admitted by the connection trust policy.
+   * @param origin - public origin bound to the signed cookie.
+   * @returns the current username, or undefined for an invalid or removed account.
+   */
+  const sessionUsername = (request: ConnectionTrustRequest, origin: string): string | undefined => {
+    if (!active) return undefined
+    const token = readCookie(request, cookieName(origin, 'session'))
+    const userId = token === undefined ? undefined : readSession(secret, token, origin)
+    const username = userId === undefined ? undefined : userById.get(userId)?.username
+    return typeof username === 'string' ? username : undefined
+  }
+  // The Peer grants instance access. The verified cookie identifies the local account.
   const peer = ctx.connection.createPeer({ principal: { kind: 'owner' } })
   ctx.connection.authentication.register({
     authenticate(request) {
-      if (!active) return undefined
       const origin = audience(request, config.secureCookies)
-      if (origin === undefined) return undefined
-      const token = readCookie(request, cookieName(origin, 'session'))
-      const userId = token === undefined ? undefined : readSession(secret, token, origin)
-      return userId !== undefined && userById.get(userId) !== undefined ? peer : undefined
+      return origin !== undefined && sessionUsername(request, origin) !== undefined ? peer : undefined
     },
   })
 
@@ -277,6 +287,35 @@ export async function apply(ctx: Context, config: PasswordLoginConfig): Promise<
         }
       },
     }), 'host-web-password: sessions')
+    web.effect(() => web.webServer.register({
+      kind: 'exact', path: currentSessionPath,
+      /**
+       * Read the current browser's identity or end its local session.
+       * @param request - authenticated Web request.
+       * @param response - private profile response or cookie deletion.
+       */
+      handler(request, response) {
+        if (request.method !== 'GET' && request.method !== 'DELETE') {
+          reply(response, 405, { allow: 'GET, DELETE' })
+          return
+        }
+        const origin = audience(request, config.secureCookies)
+        const username = origin === undefined ? undefined : sessionUsername(request, origin)
+        if (origin === undefined || username === undefined) {
+          reply(response, 401)
+          return
+        }
+        if (request.method === 'DELETE') {
+          if (request.headers.origin !== origin) {
+            reply(response, 403)
+            return
+          }
+          reply(response, 204, { 'set-cookie': writeCookie(cookieName(origin, 'session'), '', 0, config.secureCookies, '/') })
+          return
+        }
+        reply(response, 200, { 'content-type': 'application/json; charset=utf-8' }, JSON.stringify({ username }))
+      },
+    }), 'host-web-password: current session')
   })
 }
 
