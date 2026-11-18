@@ -30,6 +30,29 @@ Mount this function plugin beside Connection and Credentials. It also injects `c
 | Field | Default | Meaning |
 |---|---|---|
 | `cookieMaxAgeDays` | `30` | Absolute browser and API Cookie lifetime in days |
+| `passwordLogin` | unset | Enable local Web account login |
+
+### Local Web account login
+
+From a source checkout, create an operator in a terminal and launch Web with the [loopback patch](../../../apps/cli/config/examples/web-password-login/cordis.yml).
+
+```sh
+pnpm exec tsx scripts/create-web-login-user.ts operator
+pnpm dsh web --patch ./apps/cli/config/examples/web-password-login/cordis.yml
+```
+
+The setup command prompts for the password and writes an Argon2id hash to `$DSH_HOME/auth/users.sqlite`. The login form uses a one-use PNG verification challenge. A valid login issues an authority-bound JWT in an HttpOnly Cookie. Every provisioned account has owner access to that DSH instance.
+
+| `passwordLogin` field | Default | Meaning |
+|---|---|---|
+| `databasePath` | required | Absolute path to the account database. Pass the same path as the optional second argument of the setup command if customized. |
+| `secureCookies` | `true` | Require HTTPS cookies. Set to `false` for loopback HTTP only. |
+| `sessionSeconds` | `28800` | JWT lifetime in seconds. |
+| `captchaSeconds` | `180` | Image challenge lifetime in seconds. |
+| `captchaCapacity` | `256` | Maximum number of outstanding image challenges per Host. |
+| `concurrentPasswordChecks` | `4` | Maximum simultaneous password checks per Host. |
+
+### Launch-token login
 
 Configure `printUrl` and `openBrowser` on the WebApp runtime, not this plugin. Authentication remains available without startup publication.
 

@@ -6,6 +6,7 @@ import { CONNECT_PATH } from '@deepseek-ai/dsh-client-connection'
 import type { ConnectionTrustRequest, PeerScope } from '@deepseek-ai/dsh-client-connection'
 import type {} from '@deepseek-ai/dsh-host-webserver'
 import { BrowserAuth } from './browser-auth.ts'
+import { applyPasswordLogin, PasswordLoginConfig } from './password-login/index.ts'
 
 /** Stable plugin name. */
 export const name = 'host-authentication-token'
@@ -16,11 +17,14 @@ export const inject = ['connection', 'connection.authentication', 'credentials']
 export interface Config {
   /** Absolute cookie lifetime in days; default 30. */
   cookieMaxAgeDays: number
+  /** Local Web account configuration. The launch-token provider is disabled when present. */
+  passwordLogin?: PasswordLoginConfig
 }
 
 /** Validate cookie lifetime before preparing the token implementation. */
 export const Config: z<Config> = z.object({
   cookieMaxAgeDays: z.natural().min(1).default(30),
+  passwordLogin: PasswordLoginConfig,
 })
 
 /**
@@ -29,6 +33,10 @@ export const Config: z<Config> = z.object({
  * @param config - validated browser and API cookie lifetime.
  */
 export async function apply(ctx: Context, config: Config): Promise<void> {
+  if (config.passwordLogin !== undefined) {
+    await applyPasswordLogin(ctx, config.passwordLogin)
+    return
+  }
   const auth = await BrowserAuth.create(ctx[Context.root], ctx.credentials, config.cookieMaxAgeDays)
   const peer = ctx.connection.createPeer({ principal: { kind: 'owner' } })
   const apiPeers = new Map<PeerScope['id'], PeerScope>()

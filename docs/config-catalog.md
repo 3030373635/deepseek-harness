@@ -1866,13 +1866,31 @@ export interface Config {
 ## `@deepseek-ai/dsh-host-authentication-token`
 
 - `inject`: `connection` · `connection.authentication` · `credentials`
-- `source`: [`packages/host/authentication-token/src/index.ts:16`](../packages/host/authentication-token/src/index.ts)
+- `source`: [`packages/host/authentication-token/src/index.ts:17`](../packages/host/authentication-token/src/index.ts)
 
 ```ts config-catalog
 /** Default browser and API cookie lifetime. */
 export interface Config {
   /** Absolute cookie lifetime in days; default 30. */
   cookieMaxAgeDays: number
+  /** Local Web account configuration. The launch-token provider is disabled when present. */
+  passwordLogin?: PasswordLoginConfig
+}
+
+/** Deployment settings for the password provider. */
+export interface PasswordLoginConfig {
+  /** Absolute path to the private SQLite account database. */
+  databasePath: string
+  /** Require HTTPS for browser authentication. False permits loopback HTTP. */
+  secureCookies: boolean
+  /** JWT validity in seconds. */
+  sessionSeconds: number
+  /** Verification image validity in seconds. */
+  captchaSeconds: number
+  /** Maximum outstanding verification challenges per Host. */
+  captchaCapacity: number
+  /** Maximum concurrent password checks per Host. */
+  concurrentPasswordChecks: number
 }
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-host-authentication-token -->

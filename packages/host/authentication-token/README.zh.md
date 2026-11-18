@@ -30,6 +30,29 @@ kind: "package-reference"
 | 字段 | 默认值 | 含义 |
 |---|---|---|
 | `cookieMaxAgeDays` | `30` | 浏览器与 API Cookie 的绝对有效期，单位为天 |
+| `passwordLogin` | 未设置 | 启用 Web 本地账号登录 |
+
+### Web 本地账号登录
+
+在源码仓库的终端中创建账号，然后使用[回环地址补丁](../../../apps/cli/config/examples/web-password-login/cordis.yml)启动 Web。
+
+```sh
+pnpm exec tsx scripts/create-web-login-user.ts operator
+pnpm dsh web --patch ./apps/cli/config/examples/web-password-login/cordis.yml
+```
+
+创建命令提示输入密码，并将 Argon2id 哈希写入 `$DSH_HOME/auth/users.sqlite`。登录表单使用一次性 PNG 图片验证码。登录成功后，服务端通过 HttpOnly Cookie 签发绑定当前访问地址的 JWT。创建的账号拥有该 DSH 实例的所有者权限。
+
+| `passwordLogin` 字段 | 默认值 | 含义 |
+|---|---|---|
+| `databasePath` | 必填 | 用户数据库的绝对路径。自定义路径时，将同一路径作为创建命令的第二个参数。 |
+| `secureCookies` | `true` | 使用 HTTPS Cookie。仅在回环地址的 HTTP 环境下设置为 `false`。 |
+| `sessionSeconds` | `28800` | JWT 的有效时长，单位为秒。 |
+| `captchaSeconds` | `180` | 图片验证码的有效时长，单位为秒。 |
+| `captchaCapacity` | `256` | 每个 Host 同时保留的待验证图片数量上限。 |
+| `concurrentPasswordChecks` | `4` | 每个 Host 同时校验密码的请求数上限。 |
+
+### 启动 Token 登录
 
 在 WebApp runtime 上配置 `printUrl` 与 `openBrowser`，而非本插件。不发布启动入口时，认证仍然可用。
 

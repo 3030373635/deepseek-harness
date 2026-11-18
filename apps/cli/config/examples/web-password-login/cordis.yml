@@ -1,0 +1,6 @@
+# Opt in to Web password login. This example is for local HTTP development.
+- id: authentication-token
+  config:
+    passwordLogin:
+      databasePath: !!js "ctx.profileContext.home + '/auth/users.sqlite'"
+      secureCookies: false
