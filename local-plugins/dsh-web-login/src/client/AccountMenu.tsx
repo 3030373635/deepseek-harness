@@ -1,6 +1,6 @@
 /** Local Web identity and session actions in the shell's settings launcher. */
 import { useEffect, useRef, useState } from 'react'
-import { IconSettingsOutlineRegular, IconUserOutlineMedium, Menu, Toast } from '@deepseek-ai/dsh-client-ui-primitives'
+import { ICON_REGULAR_STROKE, IconSettingsOutlineRegular, IconUserOutlineMedium, Menu, Toast } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import { currentSessionPath, loginPath } from '../routes.ts'
 import css from './AccountMenu.module.css'
@@ -27,6 +27,14 @@ async function loadUsername(signal: AbortSignal): Promise<string | undefined> {
     throw new Error('The local account response has no username')
   }
   return account.username
+}
+
+/** @returns The built-in account menu's decorative sign-out glyph at the menu's 14 px size. */
+function LogoutIcon() {
+  return <svg width={14} height={14} viewBox="-.5 -.5 17 17" fill="none" aria-hidden="true" strokeWidth={ICON_REGULAR_STROKE}>
+    <path vectorEffect="non-scaling-stroke" d="M5.5 1.5H3C2.17 1.5 1.5 2.17 1.5 3V13C1.5 13.83 2.17 14.5 3 14.5H5.5M5 8H14.5M10.5 4L14.5 8L10.5 12"
+      stroke="currentColor" strokeLinejoin="round" />
+  </svg>
 }
 
 /**
@@ -84,7 +92,7 @@ export function AccountMenu({ wide, settingsShortcut, openSettings, t }: Props) 
         { id: 'settings', label: t('settings'), icon: <IconSettingsOutlineRegular size={14} />,
           ...(settingsShortcut === undefined ? {} : { shortcut: settingsShortcut }) },
         ...(account.status === 'failed' ? [{ id: 'retry', label: t('retry') }] : []),
-        ...(account.status === 'ready' ? [{ id: 'sign-out', label: t('signOut'), disabled: busy }] : []),
+        ...(account.status === 'ready' ? [{ id: 'sign-out', label: t('signOut'), icon: <LogoutIcon />, disabled: busy }] : []),
       ]}
       onClose={() => setOpen(false)}
       onSelect={id => {
