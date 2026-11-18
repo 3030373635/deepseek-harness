@@ -29,7 +29,7 @@ async function readPassword(prompt: string): Promise<string> {
 /** Read the operator's login details and persist the password hash. */
 async function main(): Promise<void> {
   const [username, databasePath, ...extra] = process.argv.slice(2)
-  if (!username || extra.length > 0) throw new Error('Usage: dsh-web-login-user <username> [databasePath]')
+  if (!username || extra.length > 0) throw new Error('Usage: dsh-web-custom-user <username> [databasePath]')
   if (!process.stdin.isTTY) throw new Error('Run this command in a terminal to enter the password privately')
   const password = await readPassword('Password: ')
   const confirmation = await readPassword('Confirm password: ')

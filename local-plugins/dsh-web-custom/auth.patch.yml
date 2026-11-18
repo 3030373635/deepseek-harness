@@ -15,7 +15,7 @@
 
 - insert:
     - id: web-password-login
-      name: dsh-web-login
+      name: dsh-web-custom
       inject: [profileContext, webStartup]
       config:
         databasePath: !!js "ctx.profileContext.home + '/auth/users.sqlite'"
