@@ -1,6 +1,6 @@
 /** Text for the custom Web sidebar. */
 const en = {
-  brand: '横枢',
+  brand: '衡枢',
   account: 'Local account',
   settings: 'Settings',
   signOut: 'Sign out',
