@@ -2,6 +2,7 @@
 import type { HeroBrandMarkOwnerProps } from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type { PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
 import logoUrl from './assets/hengshu.png'
+import './brand.css'
 
 /**
  * Render the decorative logo at the size requested by its host.
@@ -9,7 +10,7 @@ import logoUrl from './assets/hengshu.png'
  * @returns The Hengshu logo image.
  */
 export function BrandMark({ size, className }: HeroBrandMarkOwnerProps) {
-  return <img src={logoUrl} className={className} width={size} height={size} alt="" />
+  return <img src={logoUrl} className={className} width={size} height={size} alt="" data-hengshu-logo="" />
 }
 
 /**

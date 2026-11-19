@@ -1,0 +1,4 @@
+/* The badge follows the headline in the title group. Scope this rule to this plugin's home logo. */
+[data-slot='conversation.hero.frame'] span:has(> [data-slot='conversation.hero.brand.mark'] [data-hengshu-logo]) + span > span:last-child {
+  display: none;
+}
