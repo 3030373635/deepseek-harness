@@ -53,6 +53,9 @@ it('redirects the unauthenticated Web entry and issues a PNG challenge', async (
   expect(response.headers.get('location')).toBe('/login')
   const page = await fetch(`${origin}/login`)
   const html = await page.text()
+  // SVG symbols and form controls share the ID namespace used for browser event binding.
+  const ids = [...html.matchAll(/\bid="([^"]+)"/gu)].map(match => match[1])
+  expect(ids.filter((id, index) => ids.indexOf(id) !== index)).toEqual([])
   expect(html).toContain('name="captcha"')
   expect(html).toContain('<link rel="icon" type="image/png" href="/dsh-web-custom/logo.png">')
   const favicon = await fetch(`${origin}/dsh-web-custom/logo.png`)
@@ -68,7 +71,7 @@ it('redirects the unauthenticated Web entry and issues a PNG challenge', async (
 })
 
 it('consumes a CAPTCHA on the first attempt and admits only the signed session cookie', async () => {
-  vi.spyOn(Captcha, 'createCaptchaCode').mockReturnValue('12345')
+  vi.spyOn(Captcha, 'createCaptchaCode').mockReturnValue('0123')
   const { origin, databasePath } = await start()
   const database = await openUsers(databasePath)
   try {
@@ -99,10 +102,12 @@ it('consumes a CAPTCHA on the first attempt and admits only the signed session c
   }
 
   const used = await challenge()
-  expect((await login(used, '00000')).status).toBe(401)
-  expect((await login(used, '12345')).status).toBe(401)
-  expect((await login(await challenge(), '12345', 'incorrect')).status).toBe(401)
-  const signedIn = await login(await challenge(), '12345')
+  expect((await login(used, '0000')).status).toBe(401)
+  expect((await login(used, '0123')).status).toBe(401)
+  expect((await login(await challenge(), '00123')).status).toBe(401)
+  expect((await login(await challenge(), '123')).status).toBe(401)
+  expect((await login(await challenge(), '0123', 'incorrect')).status).toBe(401)
+  const signedIn = await login(await challenge(), '0123')
   expect(signedIn.status).toBe(201)
   const setCookie = signedIn.headers.get('set-cookie')
   expect(setCookie).toContain('HttpOnly; SameSite=Strict')

@@ -3,11 +3,27 @@
 const messages = {
   en: {
     title: 'Sign in',
+    brand: 'Hengshu',
+    platform: 'Agent workspace',
+    brandLabel: 'Hengshu agent workspace',
+    heroLabel: 'About Hengshu',
+    heroStart: 'From words',
+    heroEnd: 'to action',
+    description: 'Let agents handle the busywork. Make time for what matters.',
+    welcome: 'Welcome back',
     username: 'Username',
+    usernamePlaceholder: 'Enter your username',
     password: 'Password',
+    passwordPlaceholder: 'Enter your password',
+    showPassword: 'Show password',
+    hidePassword: 'Hide password',
     captcha: 'Verification code',
+    captchaPlaceholder: 'Enter the code',
     image: 'Verification image',
+    imageRefresh: 'Verification image, click for a new image',
     refresh: 'New image',
+    refreshed: 'Verification image updated',
+    loading: 'Loading verification image…',
     pending: 'Signing in…',
     invalid: 'Check your username, password, and verification code.',
     unavailable: 'Sign-in is temporarily unavailable. Try again.',
@@ -15,112 +31,118 @@ const messages = {
   },
   zh: {
     title: '登录',
+    brand: '衡枢',
+    platform: '智能体工作平台',
+    brandLabel: '衡枢智能体工作平台',
+    heroLabel: '衡枢品牌介绍',
+    heroStart: '把「会说话」',
+    heroEnd: '变成「会干活」',
+    description: '把繁琐交给智能体，把时间留给更重要的事。',
+    welcome: '欢迎回来',
     username: '用户名',
+    usernamePlaceholder: '请输入用户名',
     password: '密码',
+    passwordPlaceholder: '请输入密码',
+    showPassword: '显示密码',
+    hidePassword: '隐藏密码',
     captcha: '验证码',
+    captchaPlaceholder: '请输入验证码',
     image: '验证码图片',
+    imageRefresh: '图形验证码，点击换一张',
     refresh: '换一张',
+    refreshed: '验证码已更新',
+    loading: '正在加载验证码…',
     pending: '正在登录…',
-    invalid: '请检查用户名、密码和验证码。',
-    unavailable: '暂时无法登录，请重试。',
-    imageError: '验证码图片加载失败，请换一张。',
+    invalid: '请检查用户名、密码和验证码',
+    unavailable: '暂时无法登录，请重试',
+    imageError: '验证码图片加载失败，请换一张',
   },
 }
 
 const style = `
-  :root {
-    color-scheme: light dark;
-    font: 16px/1.45 system-ui, -apple-system, sans-serif;
-    --background: #f7f9fc;
-    --surface: #fff;
-    --text: #171c26;
-    --muted: #586475;
-    --stroke: #dbe1ea;
-    --accent: #245dda;
-    --accent-hover: #204fc0;
-    --danger: #a51f2b;
-    --shadow: 0 8px 40px rgb(20 47 95 / 7%);
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --background: #151517;
-      --surface: #212123;
-      --text: #f3f4f6;
-      --muted: #b4becd;
-      --stroke: #434652;
-      --accent: #285ecb;
-      --accent-hover: #3673dc;
-      --danger: #ff9da6;
-      --shadow: 0 8px 40px rgb(0 0 0 / 22%);
+    :root { --ink: #20372e; --green: #285443; --muted: #778077; --line: #e2e7df; --paper: #fafbf7; --lime: #dce8ab; }
+    * { box-sizing: border-box; }
+    /* 背景覆盖整个窗口，内容区的限宽只影响排版。 */
+    body { margin: 0; color: var(--ink); background: radial-gradient(ellipse at 14% 67%, #e6edd588, transparent 62%) var(--paper); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; -webkit-font-smoothing: antialiased; }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    button, input { -webkit-tap-highlight-color: transparent; }
+    button:focus-visible, input:focus-visible { outline: 3px solid #9cad75; outline-offset: 4px; }
+    svg { display: block; }
+    .icons { position: absolute; width: 0; height: 0; overflow: hidden; }
+    .icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+    /* 内容组限宽居中，表单卡片与品牌文案保持紧凑间距。 */
+    .page { position: relative; isolation: isolate; min-height: 100svh; display: grid; grid-template-rows: auto 1fr; max-width: 1440px; margin: 0 auto; padding: 48px clamp(32px, 6.5vw, 104px) 30px; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-mark { width: 38px; height: 38px; object-fit: contain; flex-shrink: 0; }
+    .brand-name { font-size: 26px; font-weight: 500; letter-spacing: 4px; line-height: 1; }
+    .brand-descriptor { color: #7b8575; font-size: 12px; letter-spacing: 1px; margin-left: 10px; }
+    .workspace { display: grid; grid-template-columns: minmax(0, 1fr) 410px; align-items: center; gap: 112px; width: 100%; max-width: 1140px; margin: 0 auto; padding: 60px 0 90px; }
+    .hero h1 { margin: 0 0 28px; font-size: clamp(40px, 3.7vw, 54px); font-weight: 500; letter-spacing: -2px; line-height: 1.5; }
+    .hero h1 span { display: block; color: var(--green); }
+    .hero-description { margin: 0; max-width: 430px; color: #7c8775; font-size: 14px; line-height: 2; letter-spacing: .2px; text-wrap: pretty; }
+    .login-content { width: 100%; padding: 36px; background: #ffffffdb; border: 1px solid #e0e6da; border-radius: 18px; box-shadow: 0 16px 48px -28px #324a352b, 0 2px 6px #324a3503; }
+    h2 { font-size: 26px; font-weight: 500; letter-spacing: -.5px; margin: 0 0 30px; }
+    .field { margin-bottom: 22px; }
+    .label-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    label { font-size: 14px; color: #455143; }
+    .input-wrap { position: relative; display: flex; align-items: center; }
+    .input-wrap > .icon { position: absolute; left: 15px; width: 18px; height: 18px; color: #9aA291; pointer-events: none; }
+    input { width: 100%; min-width: 0; height: 52px; padding: 0 15px 0 44px; background: #ffffffb3; color: var(--ink); font-size: 14px; border: 1px solid #dce2d5; border-radius: 9px; transition: background .2s, border-color .2s, box-shadow .2s; }
+    input::placeholder { color: #a0a69a; }
+    input:focus { outline: none; border-color: #6e8860; background: #fff; box-shadow: 0 0 0 3px #6e886014; }
+    input[aria-invalid="true"] { border-color: #b56c52; }
+    #password { padding-right: 47px; }
+    .icon-button { display: grid; place-items: center; border: 0; background: transparent; color: #929b88; border-radius: 6px; width: 38px; height: 38px; }
+
+    .password-toggle { position: absolute; right: 6px; }
+    .password-toggle .icon { width: 20px; height: 20px; stroke-width: 1.7; }
+    .captcha-row { display: grid; grid-template-columns: minmax(0, 1fr) 116px; gap: 12px; }
+    .captcha-image { overflow: hidden; height: 52px; padding: 0; border: 1px solid #e0e5d6; border-radius: 9px; background: #edf1e3; }
+
+    .refresh { border: 0; padding: 2px 0; background: transparent; color: #7c8971; display: flex; align-items: center; gap: 5px; font-size: 12px; border-radius: 3px; }
+
+    .refresh .icon { width: 13px; height: 13px; }
+    .submit { height: 50px; width: 100%; border: 1px solid var(--green); border-radius: 9px; color: #fff; background: var(--green); font-size: 15px; font-weight: 500; letter-spacing: 2px; transition: background .2s, transform .2s; }
+    .submit:active:not(:disabled) { transform: translateY(1px); }
+    .status { min-height: 39px; padding: 8px 0 10px; font-size: 12px; line-height: 1.7; color: #a1523c; margin: 0; }
+    @media (max-width: 1080px) { .workspace { grid-template-columns: minmax(0, 1fr) 380px; gap: 48px; } .hero h1 { font-size: 43px; } .hero-description { max-width: 310px; } .login-content { padding: 30px; } }
+    @media (max-width: 900px) { .page { max-width: 560px; padding: 32px 40px 24px; } .workspace { grid-template-columns: minmax(0, 1fr); gap: 36px; padding: 48px 0; } .hero h1 { font-size: 40px; margin-bottom: 18px; } .hero-description { max-width: none; } h2 { font-size: 25px; margin-bottom: 28px; } }
+    @media (max-width: 480px) { .page { padding: 28px 24px 24px; } .brand-mark { width: 34px; height: 34px; } .brand-name { font-size: 24px; } .brand-descriptor { margin-left: 4px; font-size: 11px; } .workspace { padding: 42px 0 24px; gap: 30px; } .login-content { padding: 26px 22px; border-radius: 16px; } .captcha-row { grid-template-columns: minmax(0, 1fr) 96px; gap: 10px; } .hero h1 { font-size: clamp(30px, 8.5vw, 37px); letter-spacing: -1px; } .hero-description { font-size: 13px; max-width: 300px; } .field { margin-bottom: 20px; } }
+    @media (max-width: 360px) { .page { padding-left: 18px; padding-right: 18px; } .login-content { padding: 24px 18px; } .captcha-row { grid-template-columns: minmax(0, 1fr) 80px; } #captcha { padding-left: 12px; } .captcha-row .input-wrap > .icon { display: none; } }
+    /* 较矮的桌面窗口收缩纵向留白，表单内容保持完整可见。 */
+    @media (min-width: 901px) and (max-height: 820px) {
+      .page { padding-top: 24px; padding-bottom: 24px; }
+      .workspace { padding-top: 16px; padding-bottom: 16px; }
+      .login-content { padding-top: 28px; padding-bottom: 28px; }
+      h2 { margin-bottom: 24px; }
+      .field { margin-bottom: 20px; }
     }
-  }
-  * { box-sizing: border-box; }
-  body {
-    display: grid;
-    place-items: center;
-    min-height: 100vh;
-    min-height: 100svh;
-    margin: 0;
-    padding: 24px 16px;
-    color: var(--text);
-    background: var(--background);
-  }
-  main {
-    width: min(100%, 400px);
-    padding: clamp(20px, 5vw, 34px);
-    border: 1px solid var(--stroke);
-    border-radius: 20px;
-    box-shadow: var(--shadow);
-    background: var(--surface);
-  }
-  .brand { display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: .875rem; font-weight: 600; }
-  .brand img { display: block; }
-  h1 { margin: 14px 0 24px; font-size: 1.625rem; letter-spacing: -.02em; }
-  form { display: grid; gap: 15px; }
-  label { display: block; margin-bottom: 6px; font-size: .875rem; font-weight: 600; }
-  input, button { min-height: 44px; border-radius: 9px; font: inherit; }
-  input {
-    width: 100%;
-    min-width: 0;
-    padding: 8px 10px;
-    border: 1px solid var(--stroke);
-    background: var(--surface);
-    color: inherit;
-  }
-  :focus-visible { outline: 2px solid #5686fe; outline-offset: 2px; }
-  button { cursor: pointer; }
-  button:disabled { cursor: default; opacity: .62; }
-  .challenge { display: grid; grid-template-columns: 1fr 112px; gap: 8px; }
-  .challenge-view {
-    display: grid;
-    place-items: center;
-    border: 1px solid var(--stroke);
-    background: var(--background);
-    overflow: hidden;
-    padding: 0;
-  }
-  .challenge-view img { display: block; width: 110px; height: 40px; object-fit: contain; }
-  .challenge-view img[hidden] { display: none; }
-  .refresh {
-    display: block;
-    min-height: 34px;
-    margin: 1px 0 0 auto;
-    padding: 3px 1px;
-    border: 0;
-    background: transparent;
-    color: var(--muted);
-    font-size: .8125rem;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-  }
-  .submit { border: 0; background: var(--accent); color: white; font-weight: 650; }
-  .submit:hover:not(:disabled) { background: var(--accent-hover); }
-  .error { margin: 0; color: var(--danger); font-size: .875rem; }
-  .error:empty { display: none; }
+    @media (min-width: 901px) and (max-height: 680px) {
+      .page { padding-top: 20px; padding-bottom: 20px; }
+      .brand-mark { width: 34px; height: 34px; }
+      .workspace { padding-top: 12px; padding-bottom: 12px; }
+      .login-content { padding-top: 24px; padding-bottom: 24px; }
+      h2 { font-size: 24px; margin-bottom: 20px; }
+      .field { margin-bottom: 16px; }
+      input, .captcha-image { height: 46px; }
+      .status { min-height: 33px; padding-top: 6px; padding-bottom: 6px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
+    @media (hover: hover) { .icon-button:hover:not(:disabled) { background: #eef2e7; color: var(--green); } .captcha-image:hover:not(:disabled) { border-color: #9cae88; } .refresh:hover:not(:disabled) { color: var(--green); } .submit:hover:not(:disabled) { background: #1c4232; } }
+    :root { color-scheme: light; }
+    .captcha-field { margin-bottom: 0; }
+    .captcha-image img { display: block; width: 100%; height: 100%; object-fit: contain; }
+    .captcha-image img[hidden] { display: none; }
+    button:disabled { cursor: default; opacity: .62; }
+    form[aria-busy="true"] button:disabled { opacity: 1; }
+    .status[data-state="pending"] { color: var(--muted); }
+    .status[data-state="success"] { color: #6c7e5f; }
+    @media (pointer: coarse) { input { font-size: 16px; } }
 `
 
 /**
- * Render login and its progressive form interactions in the browser language.
+ * Render the Hengshu login with server-issued, one-use verification images.
  * @param language - browser Accept-Language header.
  * @param nonce - response-specific CSP nonce.
  * @returns the document shown before DSH's authenticated app starts.
@@ -133,34 +155,73 @@ export function renderLoginPage(language: string | undefined, nonce: string): st
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>${text.title} · DeepSeek Harness</title>
-    <link rel="icon" href="/favicon.svg">
+    <meta name="color-scheme" content="light">
+    <meta name="theme-color" content="#f4f6f0">
+    <title>${text.title} · ${text.brand}</title>
     <style nonce="${nonce}">${style}</style>
   </head>
   <body>
-    <main>
-      <div class="brand"><picture><source media="(prefers-color-scheme: dark)" srcset="/favicon-dark.svg"><img src="/favicon.svg" width="24" height="24" alt=""></picture>DeepSeek Harness</div>
-      <h1>${text.title}</h1>
-      <form method="post" action="/auth/sessions" id="login">
-        <div>
-          <label for="username">${text.username}</label>
-          <input id="username" name="username" autocomplete="username" maxlength="80" required>
-        </div>
-        <div>
-          <label for="password">${text.password}</label>
-          <input id="password" name="password" type="password" autocomplete="current-password" maxlength="1024" required>
-        </div>
-        <div>
-          <label for="captcha">${text.captcha}</label>
-          <div class="challenge">
-            <input id="captcha" name="captcha" autocomplete="off" inputmode="numeric" pattern="[0-9]{5}" maxlength="5" required>
-            <div class="challenge-view"><img id="image" alt="${text.image}" width="110" height="40" hidden></div>
-          </div>
-          <button class="refresh" id="refresh" type="button">${text.refresh}</button>
-        </div>
-        <p class="error" id="error" role="alert"></p>
-        <button class="submit" id="submit" type="submit" disabled>${text.title}</button>
-      </form>
+  <svg class="icons" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20v-2a7 7 0 0 1 14 0v2"/></symbol>
+    <symbol id="lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/></symbol>
+    <symbol id="shield" viewBox="0 0 24 24"><path d="m12 3 8 3v6c0 4-4.5 7.3-8 9-3.5-1.7-8-5-8-9V6z"/><path d="m8.5 12 2.3 2.3 4.7-4.6"/></symbol>
+    <!-- Eye / EyeOff 双图标参考 Lucide，https://lucide.dev/license（ISC）。 -->
+    <symbol id="eye" viewBox="0 0 24 24"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="eye-off" viewBox="0 0 24 24"><path d="M9.88 9.88a3 3 0 0 0 4.24 4.24M10.73 5.08A10.94 10.94 0 0 1 12 5c7 0 11 7 11 7a13.44 13.44 0 0 1-3.05 3.77M6.61 6.61A13.526 13.526 0 0 0 1 12s4 7 11 7a10.94 10.94 0 0 0 5.39-1.61M2 2l20 20"/></symbol>
+    <symbol id="refresh-icon" viewBox="0 0 24 24"><path d="M20 9a8 8 0 1 0 .2 5M20 4v5h-5"/></symbol>
+  </svg>
+
+    <main class="page">
+      <header class="brand" aria-label="${text.brandLabel}">
+        <img class="brand-mark" src="/dsh-web-custom/logo.png" width="38" height="38" alt="" aria-hidden="true">
+        <span class="brand-name">${text.brand}</span>
+        <span class="brand-descriptor">${text.platform}</span>
+      </header>
+      <div class="workspace">
+        <section class="hero" aria-label="${text.heroLabel}">
+          <h1>${text.heroStart}<span>${text.heroEnd}</span></h1>
+          <p class="hero-description">${text.description}</p>
+        </section>
+        <section class="login-content" aria-labelledby="login-title">
+          <h2 id="login-title">${text.welcome}</h2>
+          <form method="post" action="/auth/sessions" id="login">
+            <div class="field">
+              <div class="label-row"><label for="username">${text.username}</label></div>
+              <div class="input-wrap">
+                <svg class="icon" aria-hidden="true"><use href="#user"/></svg>
+                <input id="username" name="username" type="text" placeholder="${text.usernamePlaceholder}" autocomplete="username" maxlength="80" required>
+              </div>
+            </div>
+            <div class="field">
+              <div class="label-row"><label for="password">${text.password}</label></div>
+              <div class="input-wrap">
+                <svg class="icon" aria-hidden="true"><use href="#lock"/></svg>
+                <input id="password" name="password" type="password" placeholder="${text.passwordPlaceholder}" autocomplete="current-password" maxlength="1024" required>
+                <button class="icon-button password-toggle" id="password-toggle" type="button" aria-label="${text.showPassword}" title="${text.showPassword}" aria-pressed="false" aria-controls="password">
+                  <svg class="icon" aria-hidden="true"><use id="password-icon" href="#eye"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="field captcha-field">
+              <div class="label-row">
+                <label for="captcha">${text.captcha}</label>
+                <button class="refresh" id="refresh" type="button"><svg class="icon" aria-hidden="true"><use href="#refresh-icon"/></svg>${text.refresh}</button>
+              </div>
+              <div class="captcha-row">
+                <div class="input-wrap">
+                  <svg class="icon" aria-hidden="true"><use href="#shield"/></svg>
+                  <input id="captcha" name="captcha" type="text" placeholder="${text.captchaPlaceholder}" autocomplete="off" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required aria-describedby="error">
+                </div>
+                <button class="captcha-image" id="captcha-image" type="button" aria-label="${text.imageRefresh}" title="${text.imageRefresh}">
+                  <img id="image" alt="${text.image}" width="116" height="50" hidden>
+                </button>
+              </div>
+            </div>
+            <p class="status" id="error" role="status" aria-live="polite"></p>
+            <button class="submit" id="submit" type="submit" disabled>${text.title}</button>
+          </form>
+        </section>
+      </div>
     </main>
     <script nonce="${nonce}">
       const text = ${JSON.stringify(text)}
@@ -168,43 +229,84 @@ export function renderLoginPage(language: string | undefined, nonce: string): st
       const error = document.getElementById('error')
       const image = document.getElementById('image')
       const refresh = document.getElementById('refresh')
+      const captchaImage = document.getElementById('captcha-image')
       const submit = document.getElementById('submit')
       const captcha = document.getElementById('captcha')
+      const password = document.getElementById('password')
+      const passwordToggle = document.getElementById('password-toggle')
+      const passwordIcon = document.getElementById('password-icon')
       let imageUrl
 
-      // Each fetch replaces the browser's previous one-use challenge.
-      async function loadChallenge() {
-        refresh.disabled = submit.disabled = true
-        image.hidden = true
+      /** Toggle password visibility and its accessible action label. No parameters. */
+      function togglePassword() {
+        const visible = password.type === 'password'
+        password.type = visible ? 'text' : 'password'
+        const label = visible ? text.hidePassword : text.showPassword
+        passwordToggle.setAttribute('aria-label', label)
+        passwordToggle.setAttribute('aria-pressed', String(visible))
+        passwordToggle.title = label
+        passwordIcon.setAttribute('href', visible ? '#eye-off' : '#eye')
+      }
+
+      /**
+       * Replace the image after decoding while keeping the form visually stable.
+       * @param announceRefresh - show confirmation after a user-requested refresh succeeds.
+       */
+      async function loadChallenge(announceRefresh = false) {
+        refresh.disabled = captchaImage.disabled = submit.disabled = true
+        form.setAttribute('aria-busy', 'true')
         captcha.value = ''
+        const previousStatus = error.textContent
+        if (!imageUrl && !previousStatus) {
+          error.dataset.state = 'pending'
+          error.textContent = text.loading
+        }
+        let nextImageUrl
         try {
           const response = await fetch('/auth/challenges', { method: 'POST' })
-          if (!response.ok) throw new Error()
-          if (imageUrl) URL.revokeObjectURL(imageUrl)
-          imageUrl = URL.createObjectURL(await response.blob())
-          image.src = imageUrl
+          if (!response.ok) throw new Error('Challenge request failed')
+          nextImageUrl = URL.createObjectURL(await response.blob())
+          // Decode offscreen so replacing the visible source never exposes an empty image.
+          const replacement = new Image()
+          replacement.src = nextImageUrl
+          await replacement.decode()
+          image.src = nextImageUrl
           image.hidden = false
+          if (imageUrl) URL.revokeObjectURL(imageUrl)
+          imageUrl = nextImageUrl
+          nextImageUrl = undefined
           submit.disabled = false
-        } catch {
+          error.textContent = announceRefresh ? text.refreshed : previousStatus
+          if (announceRefresh) error.dataset.state = 'success'
+        } catch (errorLoadingImage) {
+          // Network and image-decoding failures share the same visible retry action.
+          image.hidden = true
+          error.dataset.state = 'error'
           error.textContent = text.imageError
         } finally {
-          refresh.disabled = false
+          if (nextImageUrl) URL.revokeObjectURL(nextImageUrl)
+          form.removeAttribute('aria-busy')
+          refresh.disabled = captchaImage.disabled = false
         }
       }
 
+      /** Request a fresh image without raising the mobile keyboard. No parameters. */
       function refreshChallenge() {
-        error.textContent = ''
-        void loadChallenge()
+        void loadChallenge(true)
       }
 
-      refresh.addEventListener('click', refreshChallenge)
-      form.addEventListener('submit', async event => {
+      /**
+       * Submit credentials and replace the consumed challenge after a failed attempt.
+       * @param event - browser form submission event.
+       */
+      async function signIn(event) {
         event.preventDefault()
         if (submit.disabled) return
         const body = new URLSearchParams(new FormData(form))
-        refresh.disabled = submit.disabled = true
+        refresh.disabled = captchaImage.disabled = submit.disabled = true
         submit.textContent = text.pending
-        error.textContent = ''
+        error.dataset.state = 'pending'
+        error.textContent = text.pending
         try {
           const response = await fetch(form.action, { method: 'POST', body })
           if (response.ok) {
@@ -212,13 +314,20 @@ export function renderLoginPage(language: string | undefined, nonce: string): st
             return
           }
           error.textContent = response.status === 401 ? text.invalid : text.unavailable
-        } catch {
+        } catch (errorSigningIn) {
+          // The outcome is unavailable; only a successful response admits the app.
           error.textContent = text.unavailable
         }
+        error.dataset.state = 'error'
         submit.textContent = text.title
         await loadChallenge()
         captcha.focus()
-      })
+      }
+
+      passwordToggle.addEventListener('click', togglePassword)
+      refresh.addEventListener('click', refreshChallenge)
+      captchaImage.addEventListener('click', refreshChallenge)
+      form.addEventListener('submit', signIn)
       void loadChallenge()
     </script>
   </body>
