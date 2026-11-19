@@ -79,7 +79,7 @@ export function AccountMenu({ wide, settingsShortcut, openSettings, t }: Props) 
   const initial = username === undefined ? undefined : graphemes.segment(username.toUpperCase())[Symbol.iterator]().next().value?.segment
   return <div className={css.root} data-wide={wide}>
     {signOutFailed && <Toast text={t('signOutFailed')} onDone={() => setSignOutFailed(false)} />}
-    <Menu open={open} side="top" portal autoFocus className={css.anchor}
+    <Menu open={open} side="top" align="start" anchorRef={trigger} portal autoFocus className={css.anchor} listClassName={css.menu}
       anchor={<button ref={trigger} type="button" className={css.trigger} data-wide={wide}
         aria-label={username ?? t('account')} aria-haspopup="menu" aria-expanded={open}
         onClick={() => setOpen(value => !value)}>
