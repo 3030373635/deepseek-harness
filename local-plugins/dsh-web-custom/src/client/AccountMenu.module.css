@@ -6,6 +6,14 @@
 .root[data-wide='true'] { margin-inline: 2px; }
 .anchor { width: 100%; }
 
+/* Keep this footer menu above its account row without horizontal fallback. */
+.menu[role='menu'][data-anchor-side='top'] {
+  left: anchor(left);
+  right: auto;
+  justify-self: start;
+  position-try-fallbacks: --dsh-menu-window;
+}
+
 .trigger {
   display: flex;
   align-items: center;
