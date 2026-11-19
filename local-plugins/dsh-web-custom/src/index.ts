@@ -1,5 +1,6 @@
 /** Web routes and request authentication for a local DSH operator login. */
 import { createHash, randomBytes } from 'node:crypto'
+import { readFile } from 'node:fs/promises'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { Context } from '@deepseek-ai/cordis'
 import type { ConnectionTrustRequest } from '@deepseek-ai/dsh-client-connection'
@@ -46,6 +47,18 @@ export const Config: z<PasswordLoginConfig> = z.object({
 const sessionPath = '/auth/sessions'
 const captchaPath = '/auth/challenges'
 const maxFormBytes = 8192
+const faviconPath = '/dsh-web-custom/logo.png'
+
+/**
+ * Replace document favicon declarations with this deployment's PNG logo.
+ * @param html - The DSH index or local login document.
+ * @returns The document with one custom favicon in its head.
+ */
+function withFavicon(html: string): string {
+  return html
+    .replace(/<link\b(?=[^>]*\brel=["'](?:shortcut )?icon["'])[^>]*>/giu, '')
+    .replace(/<\/head\s*>/iu, `<link rel="icon" type="image/png" href="${faviconPath}"></head>`)
+}
 
 /**
  * Read one header from either of the supported Host carriers.
@@ -145,6 +158,15 @@ function reply(response: ServerResponse, status: number, headers: Record<string,
  * @param config - validated password settings.
  */
 export async function apply(ctx: Context, config: PasswordLoginConfig): Promise<void> {
+  // The published source asset is shared with the client logo without duplicating its bytes.
+  const favicon = await readFile(new URL('../src/client/assets/hengshu.png', import.meta.url))
+  ctx.effect(() => ctx.webServer.register({
+    kind: 'exact', path: faviconPath, auth: 'anonymous',
+    resource: async () => new Response(new Uint8Array(favicon), {
+      headers: { 'content-type': 'image/png', 'cache-control': 'no-store' },
+    }),
+  }), 'web custom: favicon resource')
+  ctx.effect(() => ctx.webServer.tapIndex(withFavicon), 'web custom: document favicon')
   const secret = await initializeSessionKey(ctx.credentials)
   const users = await openUsers(config.databasePath)
   let active = true
@@ -204,7 +226,7 @@ export async function apply(ctx: Context, config: PasswordLoginConfig): Promise<
           return
         }
         const nonce = randomBytes(18).toString('base64')
-        const page = renderLoginPage(request.headers['accept-language'], nonce)
+        const page = withFavicon(renderLoginPage(request.headers['accept-language'], nonce))
         reply(response, 200, {
           'content-type': 'text/html; charset=utf-8',
           'content-security-policy': `default-src 'none'; script-src 'nonce-${nonce}'; style-src 'nonce-${nonce}'; img-src 'self' blob:; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'`,

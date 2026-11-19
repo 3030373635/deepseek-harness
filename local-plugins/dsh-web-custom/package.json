@@ -19,7 +19,7 @@
   "bin": {
     "dsh-web-custom-user": "./lib/create-user.js"
   },
-  "files": ["lib", "auth.patch.yml", "ui.patch.yml"],
+  "files": ["lib", "auth.patch.yml", "ui.patch.yml", "src/client/assets/hengshu.png"],
   "engines": {
     "node": ">=24.9.0",
     "dsh": ">=0.2.2-rc.4 <0.3.0"
