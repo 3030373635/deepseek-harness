@@ -1,10 +1,11 @@
-/** Replace the sidebar launcher when the local Web login plugin is enabled. */
+/** Register custom brand and local account components in the Web sidebar. */
 import type { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import type {} from '@deepseek-ai/dsh-client-ui-slots'
 import { AccountMenu } from './AccountMenu.tsx'
+import { BrandMark, BrandName } from './Brand.tsx'
 import { dictionaries } from './locales.ts'
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {
@@ -15,7 +16,7 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
 export const inject = ['slots', 'locale']
 
 /**
- * Register a local account launcher above the default account menu.
+ * Override the sidebar brand and account launcher while this client plugin is active.
  * @param ctx - browser plugin context owning the locale and slot contributions.
  */
 export function apply(ctx: Context): void {
@@ -23,4 +24,10 @@ export function apply(ctx: Context): void {
   ctx.slots.inject('settings.launcher', () => ctx.slots.register({
     name: 'settings.launcher', locale: 'web-login', priority: -1,
   }, AccountMenu))
+  ctx.slots.inject('sidebar.brand.mark', () =>
+    ctx.slots.inject('sidebar.brand.name', function* () {
+      // Single slots select the lowest priority. The official brand uses 0.
+      yield ctx.slots.register({ name: 'sidebar.brand.mark', priority: -1 }, BrandMark)
+      yield ctx.slots.register({ name: 'sidebar.brand.name', locale: 'web-login', priority: -1 }, BrandName)
+    }))
 }
