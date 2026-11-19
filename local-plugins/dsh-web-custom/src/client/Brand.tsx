@@ -1,15 +1,15 @@
-/** Brand artwork and name for the custom Web sidebar. */
-import type { SidebarBrandMarkOwnerProps } from '@deepseek-ai/dsh-client-ui-sidebar/client'
+/** Brand artwork for the custom Web sidebar and new-conversation header. */
+import type { HeroBrandMarkOwnerProps } from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type { PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
 import logoUrl from './assets/hengshu.png'
 
 /**
- * Render the decorative logo in the expanded sidebar and collapsed rail.
- * @param props - The square size requested by the sidebar.
+ * Render the decorative logo at the size requested by its host.
+ * @param props - The square size and optional presentation class supplied by the host.
  * @returns The Hengshu logo image.
  */
-export function BrandMark({ size }: SidebarBrandMarkOwnerProps) {
-  return <img src={logoUrl} width={size} height={size} alt="" />
+export function BrandMark({ size, className }: HeroBrandMarkOwnerProps) {
+  return <img src={logoUrl} className={className} width={size} height={size} alt="" />
 }
 
 /**

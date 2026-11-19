@@ -1,8 +1,9 @@
-/** Register custom brand and local account components in the Web sidebar. */
+/** Register custom Web brand components and the local account launcher. */
 import type { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
+import type {} from '@deepseek-ai/dsh-client-ui-sidebar/client'
 import type {} from '@deepseek-ai/dsh-client-ui-slots'
 import { AccountMenu } from './AccountMenu.tsx'
 import { BrandMark, BrandName } from './Brand.tsx'
@@ -16,7 +17,7 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
 export const inject = ['slots', 'locale']
 
 /**
- * Override the sidebar brand and account launcher while this client plugin is active.
+ * Override the sidebar brand, new-conversation logo, and account launcher while active.
  * @param ctx - browser plugin context owning the locale and slot contributions.
  */
 export function apply(ctx: Context): void {
@@ -30,4 +31,7 @@ export function apply(ctx: Context): void {
       yield ctx.slots.register({ name: 'sidebar.brand.mark', priority: -1 }, BrandMark)
       yield ctx.slots.register({ name: 'sidebar.brand.name', locale: 'web-login', priority: -1 }, BrandName)
     }))
+  ctx.slots.inject('conversation.hero.brand.mark', () => ctx.slots.register({
+    name: 'conversation.hero.brand.mark', priority: -1,
+  }, BrandMark))
 }
