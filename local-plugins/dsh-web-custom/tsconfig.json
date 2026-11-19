@@ -6,6 +6,7 @@
     "types": ["node", "client-assets"],
     "jsx": "react-jsx",
     "paths": {
+      "@deepseek-ai/dsh-client-ui-conversation/client": ["../../packages/client/ui-conversation/lib/types/client/index.d.ts"],
       "@deepseek-ai/dsh-client-locale/client": ["../../packages/client/locale/lib/types/client/index.d.ts"],
       "@deepseek-ai/dsh-client-ui-primitives": ["../../packages/client/ui-primitives/lib/types/index.d.ts"],
       "@deepseek-ai/dsh-client-ui-renderer/client": ["../../packages/client/ui-renderer/lib/types/client/index.d.ts"],
