@@ -1,5 +1,6 @@
-/** Text for the sidebar's local Web account menu. */
+/** Text for the custom Web sidebar. */
 const en = {
+  brand: '横枢',
   account: 'Local account',
   settings: 'Settings',
   signOut: 'Sign out',
@@ -9,10 +10,11 @@ const en = {
 
 type Dictionary = Record<keyof typeof en, string>
 
-/** Use English as the locale service fallback for the local account menu. */
+/** Use English as the locale service fallback for sidebar copy. */
 export const dictionaries = {
   en,
   zh: {
+    brand: en.brand,
     account: '本地账号',
     settings: '设置',
     signOut: '退出登录',
