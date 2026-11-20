@@ -1,2 +1,7 @@
 - id: ui-message-feedback
   disabled: true
+
+# Keep manual model settings available without automatic API-key onboarding.
+- id: ui-settings-models
+  config:
+    credentialOnboarding: false
