@@ -67,7 +67,7 @@ Place projects under `workspace/`, or change its bind-mount source in `compose.y
 <a id="configuration"></a>
 ## Configuration
 
-The environment file controls the deployment address and optional build registry. Nginx serves from `/`; edit [nginx.conf](nginx.conf) for proxy-specific settings. Upload request bodies are streamed without a separate proxy size cap; DSH owns upload admission.
+The environment file controls the deployment address, browser-tab title, and optional build registry. Nginx serves from `/`; edit [nginx.conf](nginx.conf) for proxy-specific settings. Upload request bodies are streamed without a separate proxy size cap; DSH owns upload admission.
 
 | Variable | Value |
 |---|---|
@@ -75,6 +75,7 @@ The environment file controls the deployment address and optional build registry
 | `DSH_HTTPS_PORT` | Published HTTPS port; defaults to `3443`. |
 | `DSH_UID` / `DSH_GID` | Runtime user and group IDs; both default to `1000` and must match workspace ownership. |
 | `DSH_PUBLIC_URL` | Required browser-facing HTTPS origin; its authority also configures DSH request trust. |
+| `DSH_CLIENT_TITLE` | Main interface browser-tab product title; empty or absent uses `衡枢`. Rebuild the image after changing it. |
 | `DSH_NPM_REGISTRY` | Optional build registry; empty or absent uses `https://registry.npmjs.org`. |
 | `DSH_CLIENT_COMMIT_HASH` | Build-time source commit, supplied by the build command. |
 
