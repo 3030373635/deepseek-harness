@@ -58,6 +58,8 @@ pnpm dsh web
 
 组合包根据 Web 入口的 TLS 或 HTTPS 公共地址设置安全 Cookie。明文 HTTP 只接受回环地址。部署使用 TLS 代理时，把外部 HTTPS 地址传给 Web 的 `--public-url`，并按部署配置受信任的 Host。
 
+Linux 服务器部署见 [Docker Compose 部署指南](../../deploy/compose/README.zh.md)，其中提供 Node 镜像、Nginx 配置、持久化数据卷和账号初始化步骤。
+
 如需自定义数据库路径或会话期限，在 Web profile 的 `cordis.patch.yml` 中覆盖 `web-password-login` 的完整 `config`。数据库路径需为绝对路径，创建账号时也可以把该路径作为第二个参数。JWT 默认有效 8 小时，图片验证码默认有效 3 分钟。
 
 ## 上游升级
