@@ -58,6 +58,8 @@ pnpm dsh web
 
 带正文的 `/feedback <内容>` 仍可提交会话反馈。
 
+组合包通过 `ui-settings-models.config.credentialOnboarding: false` 关闭 API Key 自动引导。API Key 可在「设置 → 模型」中配置。要恢复自动引导，在 Web profile 的 `cordis.patch.yml` 中把该字段覆盖为 `true`。
+
 组合包根据 Web 入口的 TLS 或 HTTPS 公共地址设置安全 Cookie。明文 HTTP 只接受回环地址。部署使用 TLS 代理时，把外部 HTTPS 地址传给 Web 的 `--public-url`，并按部署配置受信任的 Host。
 
 Linux 服务器部署见 [Docker Compose 部署指南](../../deploy/compose/README.zh.md)，其中提供 Node 镜像、Nginx 配置、持久化数据卷和账号初始化步骤。

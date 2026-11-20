@@ -58,6 +58,8 @@ The composition bundle loads the [authentication patch](auth.patch.yml) followed
 
 The `/feedback <content>` command can still submit conversation feedback when it includes a message.
 
+The bundle disables automatic API-key onboarding through `ui-settings-models.config.credentialOnboarding: false`. Configure API keys in **Settings → Models**. To restore automatic onboarding, override this field with `true` in the Web profile’s `cordis.patch.yml`.
+
 The composition bundle sets secure cookies according to the Web entry’s TLS configuration or public HTTPS URL. Plain HTTP accepts only loopback addresses. When deploying behind a TLS proxy, pass the external HTTPS URL to Web’s `--public-url` and configure trusted hosts for the deployment.
 
 For Linux servers, the [Docker Compose deployment guide](../../deploy/compose/README.md) provides the Node image, Nginx configuration, persistent volumes, and account initialization steps.
