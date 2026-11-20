@@ -31,6 +31,8 @@ pnpm dsh web
 
 此 Web profile 不使用已保存的 DeepSeek 账号授权。模型设置支持使用 API Key。如果旧会话选中了 DeepSeek 账号模型，请在模型选择器中换用已配置的模型。
 
+插件跳过预览版说明弹窗，继续后续引导，模型设置仍可使用。它通过公开插槽注册表覆盖 `welcome-notice` 步骤，不写入确认版本；卸载插件后恢复默认的说明显示行为。
+
 从本地目录链接安装后，更新组合包时重新运行 `pnpm -C local-plugins/dsh-web-custom run build` 并重启 Web。
 
 卸载使用 `pnpm dsh plugin --profile web remove dsh-web-custom`。下次启动时 Web 恢复 profile 的默认认证和反馈界面，账号数据库仍位于 DSH 数据目录。

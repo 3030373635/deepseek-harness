@@ -1,4 +1,4 @@
-/** Register custom Web brand components and the local account launcher. */
+/** Custom Web branding, local account launcher, and preview-notice suppression. */
 import type { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
@@ -7,6 +7,7 @@ import type {} from '@deepseek-ai/dsh-client-ui-sidebar/client'
 import type {} from '@deepseek-ai/dsh-client-ui-slots'
 import { AccountMenu } from './AccountMenu.tsx'
 import { BrandMark, BrandName } from './Brand.tsx'
+import { SkipWelcomeNotice } from './SkipWelcomeNotice.tsx'
 import { dictionaries } from './locales.ts'
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {
@@ -17,11 +18,15 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
 export const inject = ['slots', 'locale']
 
 /**
- * Override the sidebar brand, new-conversation logo, and account launcher while active.
+ * Override branding, the account launcher, and the preview-notice step while active.
  * @param ctx - browser plugin context owning the locale and slot contributions.
  */
 export function apply(ctx: Context): void {
   ctx.effect(() => ctx.locale.register('web-login', dictionaries), 'web login: menu dictionaries')
+  // A lower priority shadows only the official welcome-notice contribution.
+  ctx.slots.inject('settings.onboarding', () => ctx.slots.register({
+    name: 'settings.onboarding', id: 'welcome-notice', order: -100, priority: -1,
+  }, SkipWelcomeNotice))
   ctx.slots.inject('settings.launcher', () => ctx.slots.register({
     name: 'settings.launcher', locale: 'web-login', priority: -1,
   }, AccountMenu))

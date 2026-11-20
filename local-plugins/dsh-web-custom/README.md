@@ -31,6 +31,8 @@ The login page and main interface use the Hengshu logo as their browser tab icon
 
 This Web profile does not use saved DeepSeek account grants. Model settings support API keys. If an existing conversation selected a DeepSeek account model, choose a configured model in the model selector.
 
+The plugin skips the preview-notice dialog and continues to the remaining onboarding steps. Model settings remain available. It overrides the `welcome-notice` step through the public slot registry without writing an acknowledgement version. Uninstalling the plugin restores the default notice behavior.
+
 After a linked installation from the local directory, run `pnpm -C local-plugins/dsh-web-custom run build` again and restart Web whenever you update the composition bundle.
 
 Uninstall with `pnpm dsh plugin --profile web remove dsh-web-custom`. On the next launch, Web restores the profile’s default authentication and feedback interface. The account database remains in the DSH data directory.

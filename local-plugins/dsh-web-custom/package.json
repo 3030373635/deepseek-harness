@@ -60,7 +60,12 @@
     "@deepseek-ai/dsh-credentials": "link:../../packages/credentials/credentials",
     "@deepseek-ai/dsh-host-webserver": "link:../../packages/host/webserver",
     "@deepseek-ai/schemastery": "link:../../vendor/schemastery",
+    "@testing-library/react": "16.3.3",
     "@types/node": "22.20.1",
+    "@types/react": "18.3.31",
+    "@types/react-dom": "18.3.7",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
     "typescript": "6.0.3",
     "vitest": "4.1.11"
   }
