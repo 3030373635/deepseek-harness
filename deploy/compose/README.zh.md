@@ -63,6 +63,8 @@ docker compose exec --user node dsh node /app/local-plugins/dsh-web-custom/lib/c
 
 将项目放入 `workspace/`，或把 `compose.yaml` 中该绑定挂载的来源改为服务器上的现有目录。应用及其命令通过 `/workspace` 访问该目录；容器无法直接访问挂载范围以外的宿主机路径。
 
+首次进入时，没有已登记工作区和会话历史的安装会自动创建 `/workspace/deepseek-harness/default-workspace`。Docker overlay 将 `workspace-controller.config.documentsDirectory` 设置为 `/workspace`，因此创建不依赖系统 Documents 目录。运行时 UID/GID 必须对挂载目录有写权限。
+
 宿主机的 `.dsh/` 挂载到容器的 `/data`，即容器的 `DSH_HOME`。将全局 skill 放在 `.dsh/skills/<skill-name>/SKILL.md`，DSH 会扫描 `/data/skills/`。Git 和镜像构建上下文均排除 `.dsh/`。该目录还保存应用的私有数据，应仅允许部署账号访问。
 
 -----

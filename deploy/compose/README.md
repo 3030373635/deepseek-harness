@@ -63,6 +63,8 @@ docker compose exec --user node dsh node /app/local-plugins/dsh-web-custom/lib/c
 
 Place projects under `workspace/`, or change its bind-mount source in `compose.yaml` to an existing server directory. The application and its commands see that directory as `/workspace`; host paths outside the mounts are not available inside the container.
 
+On first entry, an installation with no registered workspaces or session history automatically creates `/workspace/deepseek-harness/default-workspace`. The Docker overlay sets `workspace-controller.config.documentsDirectory` to `/workspace`, so creation does not require a system Documents directory. The runtime UID/GID must have write access to the mounted directory.
+
 The host directory `.dsh/` is mounted at `/data`, the container's `DSH_HOME`. Add global skills at `.dsh/skills/<skill-name>/SKILL.md`; DSH scans `/data/skills/`. Git and the image build context exclude `.dsh/`. This directory also holds private application data; keep it accessible only to the deployment account.
 
 -----
