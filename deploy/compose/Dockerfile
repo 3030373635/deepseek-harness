@@ -17,6 +17,8 @@ RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
 
 # Git metadata stays outside the image; the caller supplies the source revision.
 ARG DSH_CLIENT_COMMIT_HASH
+# Embed the deployment's product title in the browser artifacts.
+ARG DSH_CLIENT_TITLE=衡枢
 RUN pnpm run build:artifacts
 RUN pnpm run build:check --serial
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \

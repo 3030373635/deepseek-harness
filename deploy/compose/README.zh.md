@@ -67,7 +67,7 @@ docker compose exec --user node dsh node /app/local-plugins/dsh-web-custom/lib/c
 <a id="configuration"></a>
 ## 配置
 
-环境文件控制部署地址和可选的构建仓库。Nginx 从 `/` 提供服务；代理专属设置在 [nginx.conf](nginx.conf) 中修改。上传请求体以流式转发，代理不设置独立的大小上限；DSH 拥有上传准入判断。
+环境文件控制部署地址、浏览器标签页标题和可选的构建仓库。Nginx 从 `/` 提供服务；代理专属设置在 [nginx.conf](nginx.conf) 中修改。上传请求体以流式转发，代理不设置独立的大小上限；DSH 拥有上传准入判断。
 
 | 变量 | 含义 |
 |---|---|
@@ -75,6 +75,7 @@ docker compose exec --user node dsh node /app/local-plugins/dsh-web-custom/lib/c
 | `DSH_HTTPS_PORT` | 发布的 HTTPS 端口，默认为 `3443`。 |
 | `DSH_UID` / `DSH_GID` | 运行用户和组的 ID，均默认为 `1000`，需要匹配工作区的所有权。 |
 | `DSH_PUBLIC_URL` | 必填的浏览器 HTTPS origin，其 authority 同时配置 DSH 请求信任。 |
+| `DSH_CLIENT_TITLE` | 主界面浏览器标签页的产品标题；为空或缺省时使用「衡枢」。修改后需重新构建镜像。 |
 | `DSH_NPM_REGISTRY` | 可选的构建仓库；为空或缺省时使用 `https://registry.npmjs.org`。 |
 | `DSH_CLIENT_COMMIT_HASH` | 构建时的源码 commit，由构建命令传入。 |
 
