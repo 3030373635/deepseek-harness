@@ -58,6 +58,8 @@ The `/feedback <content>` command can still submit conversation feedback when it
 
 The composition bundle sets secure cookies according to the Web entry’s TLS configuration or public HTTPS URL. Plain HTTP accepts only loopback addresses. When deploying behind a TLS proxy, pass the external HTTPS URL to Web’s `--public-url` and configure trusted hosts for the deployment.
 
+For Linux servers, the [Docker Compose deployment guide](../../deploy/compose/README.md) provides the Node image, Nginx configuration, persistent volumes, and account initialization steps.
+
 To customize the database path or session duration, override the complete `config` of `web-password-login` in the Web profile’s `cordis.patch.yml`. The database path must be absolute; the account creation command also accepts it as its second argument. JWTs are valid for eight hours by default, and verification images for three minutes.
 
 ## Upstream upgrades
