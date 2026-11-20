@@ -14,8 +14,8 @@ services:
       DSH_UID: ${DSH_UID:-1000}
       DSH_GID: ${DSH_GID:-1000}
     volumes:
-      # Account hashes, signing keys, configuration, and sessions share DSH_HOME.
-      - dsh-data:/data
+      # Host-managed DSH_HOME holds skills, accounts, keys, configuration, and sessions.
+      - ./.dsh:/data
       - ./workspace:/workspace
     init: true
     restart: unless-stopped
@@ -57,6 +57,3 @@ services:
       timeout: 5s
       start_period: 10s
       retries: 3
-
-volumes:
-  dsh-data:

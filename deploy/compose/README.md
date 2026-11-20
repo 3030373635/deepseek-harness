@@ -8,7 +8,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-Run the customized Web application on a Linux server and access it over LAN HTTPS. The image builds this checkout with `node:24-trixie`; Nginx terminates TLS and forwards HTTP and WebSocket traffic to DSH. A named volume preserves accounts, configuration, signing keys, and sessions, while a separate directory supplies the agent workspace. Restricted command execution also requires a usable Linux sandbox backend.
+Run the customized Web application on a Linux server and access it over LAN HTTPS. The image builds this checkout with `node:24-trixie`; Nginx terminates TLS and forwards HTTP and WebSocket traffic to DSH. A host directory preserves skills, accounts, configuration, signing keys, and sessions, while a separate directory supplies the agent workspace. Restricted command execution also requires a usable Linux sandbox backend.
 
 ## Table of Contents
 
@@ -40,7 +40,8 @@ Start from the repository root. Keep the following commands in `deploy/compose/`
 ```sh
 cd deploy/compose
 cp .env.example .env
-mkdir -p certs workspace
+mkdir -p certs workspace .dsh/skills
+chmod 700 .dsh
 ```
 
 Edit `.env`: replace `DSH_BIND_ADDRESS` with a concrete LAN IP of the Linux server, and set `DSH_PUBLIC_URL` to the HTTPS address browsers will use. Include `DSH_HTTPS_PORT` in the URL when it is not 443. Set `DSH_UID` and `DSH_GID` to the ordinary Linux user and group that own the workspace (`id -u` and `id -g`); the user ID must be nonzero. The entrypoint accepts only an HTTPS origin without a path prefix, query, fragment, or embedded credentials.
@@ -61,6 +62,8 @@ docker compose exec --user node dsh node /app/local-plugins/dsh-web-custom/lib/c
 ```
 
 Place projects under `workspace/`, or change its bind-mount source in `compose.yaml` to an existing server directory. The application and its commands see that directory as `/workspace`; host paths outside the mounts are not available inside the container.
+
+The host directory `.dsh/` is mounted at `/data`, the container's `DSH_HOME`. Add global skills at `.dsh/skills/<skill-name>/SKILL.md`; DSH scans `/data/skills/`. Git and the image build context exclude `.dsh/`. This directory also holds private application data; keep it accessible only to the deployment account.
 
 -----
 
@@ -86,15 +89,25 @@ The entrypoint sets the `node` account to the configured UID/GID, assigns the pr
 <a id="operate"></a>
 ## Operate and update
 
-Inspect the services or stop them with Compose. `down` preserves the `dsh-data` volume; adding `--volumes` deletes its accounts, configuration, keys, and sessions. Back up this volume and the workspace before replacing or moving a deployment.
+Inspect the services or stop them with Compose. Both `down` and `down --volumes` preserve the host directories `.dsh/` and `workspace/`. Back up both directories before replacing or moving a deployment.
 
 ```sh
 docker compose ps
 docker compose logs --tail=100 dsh nginx
-docker compose down
+docker compose stop
 ```
 
-After updating the checkout, repeat the build and start commands from [Deploy](#deploy). Keep the same Compose project name to reuse its volume; the default project name is `dsh-web`. Restart Nginx after replacing its certificate files.
+For a deployment using the former `dsh-data:/data` named volume, copy its data before recreating or removing the old DSH container. Run the following commands only while `.dsh/` does not yet exist; the original volume remains available as a backup.
+
+```sh
+docker compose stop
+mkdir -m 700 .dsh
+docker compose cp dsh:/data/. - | tar -xpf - -C .dsh
+chmod 700 .dsh
+mkdir -p .dsh/skills
+```
+
+After updating the checkout, repeat the build and start commands from [Deploy](#deploy). Keep `.dsh/` and `workspace/` beside `compose.yaml` to reuse their data. Restart Nginx after replacing its certificate files.
 
 ```sh
 docker compose restart nginx
