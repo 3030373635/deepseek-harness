@@ -1,3 +1,8 @@
+# First-use workspaces belong in the mounted tree without a desktop Documents lookup.
+- id: workspace-controller
+  config:
+    documentsDirectory: /workspace
+
 # A container serves browser directory selection inside its mounted filesystem.
 - id: directory-picker
   disabled: true
