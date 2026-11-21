@@ -30,15 +30,25 @@ if [ "$(id -u)" = 0 ]; then
     exec gosu node "$0" "$@"
 fi
 
+web_home=${DSH_WEB_HOME:-/workspace}
+case "$web_home" in
+    /*) ;;
+    *) echo 'DSH_WEB_HOME must be an absolute container path.' >&2; exit 1 ;;
+esac
+if [ ! -d "$web_home" ] || [ ! -r "$web_home" ] || [ ! -x "$web_home" ]; then
+    echo "DSH_WEB_HOME must name a readable and searchable directory: $web_home" >&2
+    exit 1
+fi
+
 # The listener requires a concrete container address rather than a wildcard.
 bind_host=$(hostname -i | awk '{print $1}')
 cd /app
 node /app/apps/cli/lib/bin.js web --dump-config >/dev/null
 node /app/apps/cli/lib/bin.js plugin --profile web add /app/local-plugins/dsh-web-custom
 
-# The compiled launcher preserves the mounted workspace as the process directory.
 cd /workspace
-exec node /app/apps/cli/lib/bin.js web \
+# The browse picker uses HOME. Keep shared agent configuration in the login home.
+DSH_AGENTS_HOME="${DSH_AGENTS_HOME:-$HOME/.agents}" HOME="$web_home" exec node /app/apps/cli/lib/bin.js web \
     --patch /etc/dsh/browser-picker.patch.yml \
     --host "$bind_host" --port 3080 --no-open \
     --public-url "$DSH_PUBLIC_URL" --trusted-host "$public_authority"
