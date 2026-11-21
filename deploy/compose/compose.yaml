@@ -13,10 +13,15 @@ services:
       DSH_PUBLIC_URL: ${DSH_PUBLIC_URL:?Set DSH_PUBLIC_URL in .env}
       DSH_UID: ${DSH_UID:-1000}
       DSH_GID: ${DSH_GID:-1000}
+      DSH_WEB_HOME: ${DSH_WEB_HOME:-}
     volumes:
       # Host-managed DSH_HOME holds skills, accounts, keys, configuration, and sessions.
       - ./volumes/config/.dsh:/data
-      - ./volumes/data/workspace:/workspace
+      - type: bind
+        source: ./volumes/data/workspace
+        target: /workspace
+        bind:
+          create_host_path: false
     init: true
     restart: unless-stopped
     healthcheck:
