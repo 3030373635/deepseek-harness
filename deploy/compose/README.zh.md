@@ -40,8 +40,8 @@ description: "通过 Docker Compose、Nginx HTTPS 和持久化数据，在 Linux
 ```sh
 cd deploy/compose
 cp .env.example .env
-mkdir -p certs workspace .dsh/skills
-chmod 700 .dsh
+mkdir -p certs volumes/data/workspace volumes/config/.dsh/skills
+chmod 700 volumes/config/.dsh
 ```
 
 编辑 `.env`：把 `DSH_BIND_ADDRESS` 换成 Linux 服务器的具体局域网 IP，并把 `DSH_PUBLIC_URL` 设置为浏览器实际使用的 HTTPS 地址。`DSH_HTTPS_PORT` 不是 443 时，URL 需要包含该端口。将 `DSH_UID` 和 `DSH_GID` 设置为工作区所属普通 Linux 用户和组的 ID（通过 `id -u` 和 `id -g` 查看）；用户 ID 必须非零。入口脚本仅接受 HTTPS origin，不接受路径前缀、query、fragment 或内嵌凭据。
@@ -61,11 +61,11 @@ docker compose up -d --wait
 docker compose exec --user node dsh node /app/local-plugins/dsh-web-custom/lib/create-user.js operator
 ```
 
-将项目放入 `workspace/`，或把 `compose.yaml` 中该绑定挂载的来源改为服务器上的现有目录。应用及其命令通过 `/workspace` 访问该目录；容器无法直接访问挂载范围以外的宿主机路径。
+将项目放入 `volumes/data/workspace/`，或把 `compose.yaml` 中该绑定挂载的来源改为服务器上的现有目录。应用及其命令通过 `/workspace` 访问该目录，并通过已配置的挂载访问宿主机文件。
 
 首次进入时，没有已登记工作区和会话历史的安装会自动创建 `/workspace/deepseek-harness/default-workspace`。Docker overlay 将 `workspace-controller.config.documentsDirectory` 设置为 `/workspace`，因此创建不依赖系统 Documents 目录。运行时 UID/GID 必须对挂载目录有写权限。
 
-宿主机的 `.dsh/` 挂载到容器的 `/data`，即容器的 `DSH_HOME`。将全局 skill 放在 `.dsh/skills/<skill-name>/SKILL.md`，DSH 会扫描 `/data/skills/`。Git 和镜像构建上下文均排除 `.dsh/`。该目录还保存应用的私有数据，应仅允许部署账号访问。
+宿主机的 `volumes/config/.dsh/` 挂载到容器的 `/data`，即容器的 `DSH_HOME`。将全局 skill 放在 `volumes/config/.dsh/skills/<skill-name>/SKILL.md`，DSH 会在容器内的 `/data/skills/` 下扫描。Git 和镜像构建上下文均排除 `volumes/`。由于 `volumes/config/.dsh/` 保存应用的私有数据，应仅允许部署账号访问。
 
 -----
 
@@ -91,7 +91,7 @@ docker compose exec --user node dsh node /app/local-plugins/dsh-web-custom/lib/c
 <a id="operate"></a>
 ## 运行与更新
 
-通过 Compose 查看服务或停止服务。`down` 和 `down --volumes` 都保留宿主机目录 `.dsh/` 与 `workspace/`。替换或迁移部署前，备份这两个目录。
+通过 Compose 查看服务或停止服务。`down` 和 `down --volumes` 都保留 `volumes/` 下的宿主机目录。替换或迁移部署前，备份这些目录。
 
 ```sh
 docker compose ps
@@ -99,17 +99,34 @@ docker compose logs --tail=100 dsh nginx
 docker compose stop
 ```
 
-若部署使用原来的 `dsh-data:/data` 具名数据卷，在重新创建或移除旧 DSH 容器之前复制其数据。仅在 `.dsh/` 尚不存在时执行以下命令；原数据卷会保留，可用于备份恢复。
+迁移现有部署时，先停止服务，再复制数据。在重新创建或移除旧容器前，从 `deploy/compose/` 执行适用的复制命令。确认目标目录尚不存在，避免混入其他部署的数据。
 
 ```sh
 docker compose stop
-mkdir -m 700 .dsh
-docker compose cp dsh:/data/. - | tar -xpf - -C .dsh
-chmod 700 .dsh
-mkdir -p .dsh/skills
+mkdir -p volumes/config volumes/data
 ```
 
-更新源码后，重复[部署](#deploy)中的构建和启动命令。将 `.dsh/` 与 `workspace/` 保留在 `compose.yaml` 旁边，以复用其中的数据。替换证书文件后重启 Nginx。
+如果旧工作区位于 `./workspace/`，将其复制到新位置。
+
+```sh
+cp -a workspace volumes/data/
+```
+
+如果旧的 `/data` 挂载使用宿主机目录 `./.dsh/`，复制该目录。
+
+```sh
+cp -a .dsh volumes/config/
+```
+
+如果旧的 `/data` 挂载使用 `dsh-data` 具名数据卷，从已停止的容器复制其中的数据。
+
+```sh
+mkdir -m 700 volumes/config/.dsh
+docker compose cp dsh:/data/. volumes/config/.dsh/
+chmod 700 volumes/config/.dsh
+```
+
+更新源码后，重复[部署](#deploy)中的构建和启动命令。移除任何原始数据前，确认可以登录，并检查会话和工作区文件是否可用。替换证书文件后重启 Nginx。
 
 ```sh
 docker compose restart nginx

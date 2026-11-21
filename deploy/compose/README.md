@@ -40,8 +40,8 @@ Start from the repository root. Keep the following commands in `deploy/compose/`
 ```sh
 cd deploy/compose
 cp .env.example .env
-mkdir -p certs workspace .dsh/skills
-chmod 700 .dsh
+mkdir -p certs volumes/data/workspace volumes/config/.dsh/skills
+chmod 700 volumes/config/.dsh
 ```
 
 Edit `.env`: replace `DSH_BIND_ADDRESS` with a concrete LAN IP of the Linux server, and set `DSH_PUBLIC_URL` to the HTTPS address browsers will use. Include `DSH_HTTPS_PORT` in the URL when it is not 443. Set `DSH_UID` and `DSH_GID` to the ordinary Linux user and group that own the workspace (`id -u` and `id -g`); the user ID must be nonzero. The entrypoint accepts only an HTTPS origin without a path prefix, query, fragment, or embedded credentials.
@@ -61,11 +61,11 @@ Create a local account in an interactive terminal, then open `DSH_PUBLIC_URL` in
 docker compose exec --user node dsh node /app/local-plugins/dsh-web-custom/lib/create-user.js operator
 ```
 
-Place projects under `workspace/`, or change its bind-mount source in `compose.yaml` to an existing server directory. The application and its commands see that directory as `/workspace`; host paths outside the mounts are not available inside the container.
+Place projects under `volumes/data/workspace/`, or change its bind-mount source in `compose.yaml` to an existing server directory. The application and its commands see that directory as `/workspace` and access host files through the configured mounts.
 
 On first entry, an installation with no registered workspaces or session history automatically creates `/workspace/deepseek-harness/default-workspace`. The Docker overlay sets `workspace-controller.config.documentsDirectory` to `/workspace`, so creation does not require a system Documents directory. The runtime UID/GID must have write access to the mounted directory.
 
-The host directory `.dsh/` is mounted at `/data`, the container's `DSH_HOME`. Add global skills at `.dsh/skills/<skill-name>/SKILL.md`; DSH scans `/data/skills/`. Git and the image build context exclude `.dsh/`. This directory also holds private application data; keep it accessible only to the deployment account.
+The host directory `volumes/config/.dsh/` is mounted at `/data`, the container's `DSH_HOME`. Add global skills at `volumes/config/.dsh/skills/<skill-name>/SKILL.md` for DSH to scan under `/data/skills/`. Git and the image build context exclude `volumes/`. Keep `volumes/config/.dsh/` accessible only to the deployment account because it holds private application data.
 
 -----
 
@@ -91,7 +91,7 @@ The entrypoint sets the `node` account to the configured UID/GID, assigns the pr
 <a id="operate"></a>
 ## Operate and update
 
-Inspect the services or stop them with Compose. Both `down` and `down --volumes` preserve the host directories `.dsh/` and `workspace/`. Back up both directories before replacing or moving a deployment.
+Inspect the services or stop them with Compose. Both `down` and `down --volumes` preserve the host directories under `volumes/`. Back up those directories before replacing or moving a deployment.
 
 ```sh
 docker compose ps
@@ -99,17 +99,34 @@ docker compose logs --tail=100 dsh nginx
 docker compose stop
 ```
 
-For a deployment using the former `dsh-data:/data` named volume, copy its data before recreating or removing the old DSH container. Run the following commands only while `.dsh/` does not yet exist; the original volume remains available as a backup.
+To migrate an existing deployment, stop it before copying its data. Run the applicable copy commands from `deploy/compose/` before recreating or removing the old container. Start with absent destination directories so the copy cannot merge with data from another deployment.
 
 ```sh
 docker compose stop
-mkdir -m 700 .dsh
-docker compose cp dsh:/data/. - | tar -xpf - -C .dsh
-chmod 700 .dsh
-mkdir -p .dsh/skills
+mkdir -p volumes/config volumes/data
 ```
 
-After updating the checkout, repeat the build and start commands from [Deploy](#deploy). Keep `.dsh/` and `workspace/` beside `compose.yaml` to reuse their data. Restart Nginx after replacing its certificate files.
+If the old workspace is in `./workspace/`, copy it to the new location.
+
+```sh
+cp -a workspace volumes/data/
+```
+
+If the old `/data` mount uses the host directory `./.dsh/`, copy that directory.
+
+```sh
+cp -a .dsh volumes/config/
+```
+
+If the old `/data` mount uses the `dsh-data` named volume, copy its contents from the stopped container.
+
+```sh
+mkdir -m 700 volumes/config/.dsh
+docker compose cp dsh:/data/. volumes/config/.dsh/
+chmod 700 volumes/config/.dsh
+```
+
+After updating the checkout, repeat the build and start commands from [Deploy](#deploy). Verify that you can sign in and that your sessions and workspace files are present before removing any original data. Restart Nginx after replacing its certificate files.
 
 ```sh
 docker compose restart nginx

@@ -1,6 +1,6 @@
 ---
 kind: upgrade-guide
-description: "Compose 部署必须先将现有具名数据卷复制到宿主机的 .dsh 目录，再重新创建 DSH 容器。"
+description: "Compose 部署必须先将应用数据和工作区文件迁移到新的宿主机挂载目录，再重新创建 DSH 容器。"
 ---
 
 # Compose 数据目录
@@ -9,10 +9,10 @@ description: "Compose 部署必须先将现有具名数据卷复制到宿主机�
 
 ## 变更
 
-`deploy/compose/compose.yaml` 将宿主机目录 `./.dsh` 挂载到 `/data`，替代 `dsh-data` 具名数据卷。现有 Compose 部署必须在重新创建 DSH 容器之前迁移账号、配置、密钥和会话。容器继续使用 `DSH_HOME=/data`；全局 skill 保存在宿主机目录 `.dsh/skills/`。
+Compose 部署将 `volumes/config/.dsh/` 挂载到 `/data`，将 `volumes/data/workspace/` 挂载到 `/workspace`。两个宿主机路径均相对于 `deploy/compose/`。现有部署的应用数据可能保存在 `dsh-data` 具名数据卷或 `./.dsh/` 中，工作区文件可能保存在 `./workspace/` 中。
 
 ## 迁移
 
-1. 在移除或重新创建旧容器之前，按照[部署迁移命令](../../../../deploy/compose/README.zh.md#operate)停止服务，并将 `/data` 复制到新建的 `deploy/compose/.dsh/` 目录。确认复制的数据可用之前，保留原具名数据卷。
+1. 在移除或重新创建旧容器之前，按照[部署迁移命令](../../../../deploy/compose/README.zh.md#operate)停止服务，并将现有数据和工作区文件复制到新的宿主机目录。
 2. 在 `deploy/compose/` 中执行 `docker compose up -d --wait`，启动更新后的部署。
-3. 确认原账号可以登录，且会话仍在。将全局 skill 放在 `deploy/compose/.dsh/skills/<skill-name>/SKILL.md` 下。
+3. 确认原账号可以登录，并检查会话和工作区文件是否可用。将全局 skill 放在 `deploy/compose/volumes/config/.dsh/skills/<skill-name>/SKILL.md` 下。
