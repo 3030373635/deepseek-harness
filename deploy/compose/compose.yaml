@@ -15,8 +15,8 @@ services:
       DSH_GID: ${DSH_GID:-1000}
     volumes:
       # Host-managed DSH_HOME holds skills, accounts, keys, configuration, and sessions.
-      - ./.dsh:/data
-      - ./workspace:/workspace
+      - ./volumes/config/.dsh:/data
+      - ./volumes/data/workspace:/workspace
     init: true
     restart: unless-stopped
     healthcheck:

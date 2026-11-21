@@ -3,14 +3,14 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/upgrade-guide/v0.2.2-rc.4/compose-data-directory/guide.md
 /:
-  en: 30163162ee3b3c5d
-  zh: 9a4e573739d914ad
+  en: 3cbef52081ba9f1d
+  zh: 1a7864f6c352bf07
 /compose-data-directory:
   en: 400bfd92a073a948
   zh: c6035932836690df
 /compose-data-directory/change:
-  en: a5f98af482487740
-  zh: eb9cb7da36b65179
+  en: da9284bd68a5a680
+  zh: c33b5e690cb8e5d3
 /compose-data-directory/migration:
-  en: ce172f2046f9ad45
-  zh: 4c5836686c34b447
+  en: 5213ddfa7c797717
+  zh: 96bcc9671a2613b3
