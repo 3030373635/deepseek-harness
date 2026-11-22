@@ -29,9 +29,20 @@ RUN pnpm -C local-plugins/dsh-web-custom run check && pnpm -C local-plugins/dsh-
 
 # The source build needs the platform's Landlock executable as well as its Node addon.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends musl-tools bubblewrap gosu \
+    && apt-get install -y --no-install-recommends \
+        bubblewrap \
+        gosu \
+        libreoffice \
+        musl-tools \
+        python3 \
+        python3-venv \
     && rm -rf /var/lib/apt/lists/*
 RUN pnpm exec tsx native/system/scripts/build.ts
+
+COPY deploy/compose/requirements.txt /opt/dsh-python-requirements.txt
+RUN python3 -m venv /opt/dsh-python \
+    && /opt/dsh-python/bin/python -m pip install --no-cache-dir -r /opt/dsh-python-requirements.txt
+ENV PATH="/opt/dsh-python/bin:${PATH}"
 
 COPY --chmod=755 deploy/compose/entrypoint.sh /usr/local/bin/dsh-compose-entrypoint
 COPY deploy/compose/browser-picker.patch.yml /etc/dsh/browser-picker.patch.yml
