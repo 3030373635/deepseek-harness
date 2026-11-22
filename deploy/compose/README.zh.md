@@ -26,7 +26,7 @@ description: "通过 Docker Compose、Nginx HTTPS 和持久化数据，在 Linux
 
 启动服务前准备好服务器和证书。Docker 在镜像内构建 Linux 依赖，宿主机不需要安装 Node.js。
 
-- 安装支持 BuildKit 的 Docker Engine 和 Docker Compose v2。构建需要访问 Node 和 Nginx 镜像、Debian 软件包以及所配置的 npm 仓库。
+- 安装支持 BuildKit 的 Docker Engine 和 Docker Compose v2。构建需要访问 Node 和 Nginx 镜像、Debian 软件包、所配置的 npm 仓库以及 PyPI。
 - 使用 subject alternative names 包含浏览器访问 IP 或主机名的 HTTPS 证书。浏览器必须信任签发 CA；私钥必须是无口令的 PEM 文件。
 - 为受限 Shell 命令提供能实际执行限制的 Landlock 后端或可用的 bubblewrap 后端。编译启动器无法补足内核缺失的能力。
 
@@ -62,6 +62,10 @@ docker compose exec --user node dsh node /app/local-plugins/dsh-web-custom/lib/c
 ```
 
 将项目放入 `volumes/data/workspace/`，或把 `compose.yaml` 中该绑定挂载的来源改为服务器上的现有目录。应用及其命令通过 `/workspace` 访问该目录，并通过已配置的挂载访问宿主机文件。
+
+Agent 命令可通过 `python` 或 `python3` 使用预装库处理 Word、Excel、PowerPoint、PDF 和图片，分析数据，以及解析 HTML 和 XML。要调整这些库，编辑 [requirements.txt](requirements.txt) 并重新构建镜像。
+
+在容器内运行 `soffice --headless --convert-to pdf example.docx` 可将 Office 文档转为 PDF。在可写目录运行这条命令，PDF 会保存到该目录。
 
 首次进入时，没有已登记工作区和会话历史的安装会自动创建 `/workspace/deepseek-harness/default-workspace`。Docker overlay 将 `workspace-controller.config.documentsDirectory` 设置为 `/workspace`，因此创建不依赖系统 Documents 目录。运行时 UID/GID 必须对挂载目录有写权限。
 

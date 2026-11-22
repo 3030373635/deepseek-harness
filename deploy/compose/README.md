@@ -26,7 +26,7 @@ Run the customized Web application on a Linux server and access it over LAN HTTP
 
 Prepare the server and certificate before starting the services. Docker builds the Linux dependencies inside the image; a host Node.js installation is unnecessary.
 
-- Install Docker Engine and Docker Compose v2 with BuildKit support. The build needs access to the Node and Nginx images, Debian packages, and the configured npm registry.
+- Install Docker Engine and Docker Compose v2 with BuildKit support. The build needs access to the Node and Nginx images, Debian packages, the configured npm registry, and PyPI.
 - Use an HTTPS certificate whose subject alternative names include the browser-facing IP or hostname. Browsers must trust its issuing CA; the private key must be an unencrypted PEM file.
 - Provide an enforced Landlock backend or a usable bubblewrap backend for restricted shell commands. Compiling the launcher does not add missing kernel capabilities.
 
@@ -62,6 +62,10 @@ docker compose exec --user node dsh node /app/local-plugins/dsh-web-custom/lib/c
 ```
 
 Place projects under `volumes/data/workspace/`, or change its bind-mount source in `compose.yaml` to an existing server directory. The application and its commands see that directory as `/workspace` and access host files through the configured mounts.
+
+Agent commands can run `python` or `python3` with the preinstalled libraries to work with Word, Excel, PowerPoint, PDF, and images, analyze data, and parse HTML and XML. Edit [requirements.txt](requirements.txt) and rebuild the image to change those libraries.
+
+Use `soffice --headless --convert-to pdf example.docx` inside the container to convert an Office document to PDF. Run the command from a writable directory to save the PDF there.
 
 On first entry, an installation with no registered workspaces or session history automatically creates `/workspace/deepseek-harness/default-workspace`. The Docker overlay sets `workspace-controller.config.documentsDirectory` to `/workspace`, so creation does not require a system Documents directory. The runtime UID/GID must have write access to the mounted directory.
 
