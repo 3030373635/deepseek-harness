@@ -60,9 +60,9 @@ pnpm dsh web
 
 组合包通过 `ui-settings-models.config.credentialOnboarding: false` 关闭 API Key 自动引导。API Key 可在「设置 → 模型」中配置。要恢复自动引导，在 Web profile 的 `cordis.patch.yml` 中把该字段覆盖为 `true`。
 
-组合包根据 Web 入口的 TLS 或 HTTPS 公共地址设置安全 Cookie。明文 HTTP 只接受回环地址。部署使用 TLS 代理时，把外部 HTTPS 地址传给 Web 的 `--public-url`，并按部署配置受信任的 Host。
+组合包根据 Web 入口的 TLS 或 HTTPS 公共地址设置 Secure Cookie。HTTP 也支持 DSH 受信任 Host 策略接受的局域网地址。登录和退出要求浏览器 Origin 与 Cookie audience 一致；Cookie 保持 HttpOnly 和 SameSite=Strict。HTTP 不加密密码和会话 Cookie，因此只用于可信局域网。
 
-Linux 服务器部署见 [Docker Compose 部署指南](../../deploy/compose/README.zh.md)，其中提供 Node 镜像、Nginx 配置、持久化数据卷和账号初始化步骤。
+Linux 服务器部署见 [Docker Compose 部署指南](../../deploy/compose/README.zh.md)，其中提供 Node 镜像、直接提供局域网 HTTP 的监听配置、持久化数据卷和账号初始化步骤。
 
 如需自定义数据库路径或会话期限，在 Web profile 的 `cordis.patch.yml` 中覆盖 `web-password-login` 的完整 `config`。数据库路径需为绝对路径，创建账号时也可以把该路径作为第二个参数。JWT 默认有效 8 小时，图片验证码默认有效 3 分钟。
 

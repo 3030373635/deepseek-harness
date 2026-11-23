@@ -1,12 +1,12 @@
 #!/bin/sh
 set -eu
 
-# The login routes use origin-root paths and require browser-facing HTTPS.
+# The direct LAN listener serves the login routes from an HTTP origin root.
 public_authority=$(node --input-type=module -e '
     const url = URL.parse(process.env.DSH_PUBLIC_URL ?? "");
-    if (url === null || url.protocol !== "https:" || url.pathname !== "/"
+    if (url === null || url.protocol !== "http:" || url.pathname !== "/"
         || url.username || url.password || url.search || url.hash) {
-        console.error("DSH_PUBLIC_URL must be an HTTPS origin, for example https://192.168.3.86:3443, without credentials, a path, query, or fragment.");
+        console.error("DSH_PUBLIC_URL must be an HTTP origin, for example http://192.168.3.86:3080, without credentials, a path, query, or fragment.");
         process.exit(1);
     }
     process.stdout.write(url.host);

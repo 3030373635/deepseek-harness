@@ -22,7 +22,7 @@ export const inject = ['webServer', 'connection', 'connection.authentication', '
 export interface PasswordLoginConfig {
   /** Absolute path to the private SQLite account database. */
   databasePath: string
-  /** Require HTTPS for browser authentication. False permits loopback HTTP. */
+  /** Mark authentication cookies Secure for HTTPS; false permits HTTP on trusted authorities. */
   secureCookies: boolean
   /** JWT validity in seconds. */
   sessionSeconds: number
@@ -84,7 +84,7 @@ function audience(request: ConnectionTrustRequest, secure: boolean): string | un
   if (host === undefined) return undefined
   const url = URL.parse(`${secure ? 'https' : 'http'}://${host}`)
   if (url === null) return undefined
-  if (!secure && !['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)) return undefined
+  // Connection admission validates the authority before authentication or anonymous route handling.
   return url.origin
 }
 

@@ -8,12 +8,15 @@ services:
       args:
         DSH_CLIENT_COMMIT_HASH: ${DSH_CLIENT_COMMIT_HASH:-}
         DSH_CLIENT_TITLE: ${DSH_CLIENT_TITLE:-衡枢}
+        DSH_BUILD_CHECK_HEAP_MB: ${DSH_BUILD_CHECK_HEAP_MB:-5120}
         NPM_REGISTRY: ${DSH_NPM_REGISTRY:-https://registry.npmjs.org}
     environment:
       DSH_PUBLIC_URL: ${DSH_PUBLIC_URL:?Set DSH_PUBLIC_URL in .env}
       DSH_UID: ${DSH_UID:-1000}
       DSH_GID: ${DSH_GID:-1000}
       DSH_WEB_HOME: ${DSH_WEB_HOME:-}
+    ports:
+      - "${DSH_BIND_ADDRESS:?Set DSH_BIND_ADDRESS in .env}:${DSH_HTTP_PORT:-3080}:3080"
     volumes:
       # Host-managed DSH_HOME holds skills, accounts, keys, configuration, and sessions.
       - ./volumes/config/.dsh:/data
@@ -42,23 +45,4 @@ services:
       interval: 10s
       timeout: 5s
       start_period: 60s
-      retries: 3
-  nginx:
-    image: nginx:1.29.2
-    depends_on:
-      dsh:
-        condition: service_healthy
-        restart: true
-    ports:
-      - "${DSH_BIND_ADDRESS:?Set DSH_BIND_ADDRESS in .env}:${DSH_HTTPS_PORT:-3443}:443"
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./certs:/etc/nginx/certs:ro
-    restart: unless-stopped
-    healthcheck:
-      # Only this internal probe skips certificate verification; browsers must trust the certificate.
-      test: [CMD, curl, --fail, --silent, --insecure, --output, /dev/null, --connect-to, "::127.0.0.1:443", "${DSH_PUBLIC_URL:?Set DSH_PUBLIC_URL in .env}/login"]
-      interval: 10s
-      timeout: 5s
-      start_period: 10s
       retries: 3

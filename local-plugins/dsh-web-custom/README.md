@@ -60,9 +60,9 @@ The `/feedback <content>` command can still submit conversation feedback when it
 
 The bundle disables automatic API-key onboarding through `ui-settings-models.config.credentialOnboarding: false`. Configure API keys in **Settings → Models**. To restore automatic onboarding, override this field with `true` in the Web profile’s `cordis.patch.yml`.
 
-The composition bundle sets secure cookies according to the Web entry’s TLS configuration or public HTTPS URL. Plain HTTP accepts only loopback addresses. When deploying behind a TLS proxy, pass the external HTTPS URL to Web’s `--public-url` and configure trusted hosts for the deployment.
+The composition bundle sets Secure cookies according to the Web entry’s TLS configuration or public HTTPS URL. HTTP also supports LAN addresses admitted by DSH’s trusted-host policy. Sign-in and sign-out require the browser origin to match the cookie audience; cookies remain HttpOnly and SameSite=Strict. HTTP does not encrypt passwords or session cookies, so use it only on a trusted LAN.
 
-For Linux servers, the [Docker Compose deployment guide](../../deploy/compose/README.md) provides the Node image, Nginx configuration, persistent volumes, and account initialization steps.
+For Linux servers, the [Docker Compose deployment guide](../../deploy/compose/README.md) provides the Node image, direct LAN HTTP listener, persistent volumes, and account initialization steps.
 
 To customize the database path or session duration, override the complete `config` of `web-password-login` in the Web profile’s `cordis.patch.yml`. The database path must be absolute; the account creation command also accepts it as its second argument. JWTs are valid for eight hours by default, and verification images for three minutes.
 

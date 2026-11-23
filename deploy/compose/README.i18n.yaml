@@ -3,35 +3,35 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write deploy/compose/README.md
 /:
-  en: 9ed0d5c7bc0ab607
-  zh: 6f9858b070dbf457
+  en: cab858414c7fbb6a
+  zh: 86b20866396bb99b
 /deploy-with-docker-compose:
   en: a9f2ebd44c0f92da
   zh: fa5235000bfc45c9
 /deploy-with-docker-compose/summary:
-  en: 5fd462f22a762fe6
-  zh: 2f114999b24bedd9
+  en: 04a9f89b8f090a4f
+  zh: 67d49fa0c8bea97b
 /deploy-with-docker-compose/table-of-contents:
   en: 4e431c7843b0f71b
   zh: 4aaa625802bf915f
 /deploy-with-docker-compose/prerequisites:
-  en: 5fadc94bd4ad1638
-  zh: 306f1ab3ab25ed74
+  en: f5b4591c90adeaec
+  zh: 8982f862d9780186
 /deploy-with-docker-compose/deploy:
-  en: a8826da1ce75e67d
-  zh: 14567da699895774
+  en: 8033f25723efe4bb
+  zh: f92f3c22b252aabd
 /deploy-with-docker-compose/configuration:
-  en: 67ee118e26b4df26
-  zh: d4668c197997f74a
+  en: 4ffc09651f486504
+  zh: 575c9940d1dc91a7
 /deploy-with-docker-compose/operate-and-update:
-  en: ca384800fa0a7d63
-  zh: 2c1c16e3d432926f
+  en: 90db2331ae4f80a6
+  zh: 2cb480ec3fea6c7d
 /deploy-with-docker-compose/troubleshooting:
-  en: e469c9d9523bddb8
-  zh: 7324ca12a49a67d2
+  en: 5c62df16759420b1
+  zh: 5d9cd29b4e007c87
 /deploy-with-docker-compose/further-exploration:
-  en: 050749a268504002
-  zh: 2c91a2ede96d191f
+  en: d28b3c2397bbfdf9
+  zh: 7f981031c06a0a9a
 /deploy-with-docker-compose/dev-note:
   en: b75c8458928b72b9
   zh: 003ba4e17b4b5269

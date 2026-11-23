@@ -20,7 +20,10 @@ ARG DSH_CLIENT_COMMIT_HASH
 # Embed the deployment's product title in the browser artifacts.
 ARG DSH_CLIENT_TITLE=衡枢
 RUN pnpm run build:artifacts
-RUN pnpm run build:check --serial
+# The aggregate programs run serially with room for native allocations and other containers.
+ARG DSH_BUILD_CHECK_HEAP_MB=5120
+RUN node --max-old-space-size="$DSH_BUILD_CHECK_HEAP_MB" node_modules/typescript/bin/tsc -p tsconfig.host.json \
+    && node --max-old-space-size="$DSH_BUILD_CHECK_HEAP_MB" node_modules/typescript/bin/tsc -p tsconfig.client.json
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
     --mount=type=cache,id=dsh-pnpm-metadata,target=/root/.cache/pnpm \
     pnpm -C local-plugins/dsh-web-custom install --frozen-lockfile --registry="$NPM_REGISTRY" --network-concurrency=16
