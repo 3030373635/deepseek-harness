@@ -86,7 +86,7 @@ Agent 命令可通过 `python` 或 `python3` 使用预装库处理 Word、Excel�
 | `DSH_PUBLIC_URL` | 必填的浏览器 HTTP origin，其 authority 同时配置 DSH 请求信任。 |
 | `DSH_WEB_HOME` | Web 进程的 `HOME`，也是工作区选择器的起始目录，默认为 `/workspace`。填写容器内运行用户可读取和进入的绝对路径。 |
 | `DSH_CLIENT_TITLE` | 主界面浏览器标签页的产品标题；为空或缺省时使用「衡枢」。修改后需重新构建镜像。 |
-| `DSH_BUILD_CHECK_HEAP_MB` | 每个串行汇总类型检查的 Node 堆内存上限，单位为 MiB，默认为 `5120`。较小值可能耗尽编译器堆内存；较大值需要更多 Docker 内存。 |
+| `DSH_BUILD_CHECK_HEAP_MB` | 每个串行汇总类型检查的 Node 堆内存上限，单位为 MiB。为空或缺省时使用 `8192`，与仓库构建检查一致。Docker 还需要为 Node 堆以外的分配预留内存。 |
 | `DSH_NPM_REGISTRY` | 可选的构建仓库；为空或缺省时使用 `https://registry.npmjs.org`。 |
 | `DSH_CLIENT_COMMIT_HASH` | 构建时的源码 commit，由构建命令传入。 |
 

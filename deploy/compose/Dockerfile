@@ -1,5 +1,15 @@
 FROM node:24-trixie
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        bubblewrap \
+        gosu \
+        libreoffice \
+        musl-tools \
+        python3 \
+        python3-venv \
+    && rm -rf /var/lib/apt/lists/*
+
 ENV CI=true \
     ELECTRON_SKIP_BINARY_DOWNLOAD=1 \
     PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
@@ -21,7 +31,7 @@ ARG DSH_CLIENT_COMMIT_HASH
 ARG DSH_CLIENT_TITLE=衡枢
 RUN pnpm run build:artifacts
 # The aggregate programs run serially with room for native allocations and other containers.
-ARG DSH_BUILD_CHECK_HEAP_MB=5120
+ARG DSH_BUILD_CHECK_HEAP_MB=8192
 RUN node --max-old-space-size="$DSH_BUILD_CHECK_HEAP_MB" node_modules/typescript/bin/tsc -p tsconfig.host.json \
     && node --max-old-space-size="$DSH_BUILD_CHECK_HEAP_MB" node_modules/typescript/bin/tsc -p tsconfig.client.json
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
@@ -31,15 +41,6 @@ RUN pnpm -C local-plugins/dsh-web-custom run build
 RUN pnpm -C local-plugins/dsh-web-custom run check && pnpm -C local-plugins/dsh-web-custom test
 
 # The source build needs the platform's Landlock executable as well as its Node addon.
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        bubblewrap \
-        gosu \
-        libreoffice \
-        musl-tools \
-        python3 \
-        python3-venv \
-    && rm -rf /var/lib/apt/lists/*
 RUN pnpm exec tsx native/system/scripts/build.ts
 
 COPY deploy/compose/requirements.txt /opt/dsh-python-requirements.txt

@@ -86,7 +86,7 @@ The environment file controls the deployment address, the workspace picker's sta
 | `DSH_PUBLIC_URL` | Required browser-facing HTTP origin; its authority also configures DSH request trust. |
 | `DSH_WEB_HOME` | `HOME` for the Web process and the starting directory for the workspace picker. Defaults to `/workspace`. Use an absolute path the runtime user can read and traverse inside the container. |
 | `DSH_CLIENT_TITLE` | Main interface browser-tab product title; empty or absent uses `衡枢`. Rebuild the image after changing it. |
-| `DSH_BUILD_CHECK_HEAP_MB` | Node heap limit in MiB for each serial aggregate type check; defaults to `5120`. Lower values can exhaust the compiler heap; higher values require more Docker memory. |
+| `DSH_BUILD_CHECK_HEAP_MB` | Node heap limit in MiB for each serial aggregate type check. Empty or absent uses `8192`, matching the repository build checks. Docker also needs memory for allocations outside the Node heap. |
 | `DSH_NPM_REGISTRY` | Optional build registry; empty or absent uses `https://registry.npmjs.org`. |
 | `DSH_CLIENT_COMMIT_HASH` | Build-time source commit, supplied by the build command. |
 

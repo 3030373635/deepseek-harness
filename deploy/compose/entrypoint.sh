@@ -6,7 +6,7 @@ public_authority=$(node --input-type=module -e '
     const url = URL.parse(process.env.DSH_PUBLIC_URL ?? "");
     if (url === null || url.protocol !== "http:" || url.pathname !== "/"
         || url.username || url.password || url.search || url.hash) {
-        console.error("DSH_PUBLIC_URL must be an HTTP origin, for example http://192.168.3.86:3080, without credentials, a path, query, or fragment.");
+        console.error("Set DSH_PUBLIC_URL in .env to the browser-facing HTTP origin without credentials, a path, query, or fragment.");
         process.exit(1);
     }
     process.stdout.write(url.host);
