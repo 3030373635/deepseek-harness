@@ -1,4 +1,6 @@
 /** Standalone Web entry document, served before the authenticated client boots. */
+import { loginPath, registrationPath } from './routes.ts'
+import { minimumPasswordLength } from './users.ts'
 
 const messages = {
   en: {
@@ -28,6 +30,18 @@ const messages = {
     invalid: 'Check your username, password, and verification code.',
     unavailable: 'Sign-in is temporarily unavailable. Try again.',
     imageError: 'The verification image could not load. Request a new image.',
+    registration: {
+      title: 'Create account',
+      heading: 'Create your first account',
+      passwordPlaceholder: `At least ${minimumPasswordLength} characters`,
+      confirmation: 'Confirm password',
+      showConfirmation: 'Show password confirmation',
+      hideConfirmation: 'Hide password confirmation',
+      pending: 'Creating account…',
+      mismatch: 'The passwords do not match.',
+      invalid: `Use a username without surrounding spaces and a password of ${minimumPasswordLength} characters or more (up to 1024 UTF-8 bytes).`,
+      unavailable: 'Account creation is temporarily unavailable. Try again.',
+    },
   },
   zh: {
     title: '登录',
@@ -56,6 +70,18 @@ const messages = {
     invalid: '请检查用户名、密码和验证码',
     unavailable: '暂时无法登录，请重试',
     imageError: '验证码图片加载失败，请换一张',
+    registration: {
+      title: '创建账号',
+      heading: '创建首个账号',
+      passwordPlaceholder: `至少 ${minimumPasswordLength} 个字符`,
+      confirmation: '确认密码',
+      showConfirmation: '显示确认密码',
+      hideConfirmation: '隐藏确认密码',
+      pending: '正在创建账号…',
+      mismatch: '两次输入的密码不一致',
+      invalid: `请使用首尾无空格的用户名，以及至少 ${minimumPasswordLength} 个字符、最多 1024 个 UTF-8 字节的密码`,
+      unavailable: '暂时无法创建账号，请重试',
+    },
   },
 }
 
@@ -92,7 +118,7 @@ const style = `
     input::placeholder { color: #a0a69a; }
     input:focus { outline: none; border-color: #6e8860; background: #fff; box-shadow: 0 0 0 3px #6e886014; }
     input[aria-invalid="true"] { border-color: #b56c52; }
-    #password { padding-right: 47px; }
+    #password, #confirmation { padding-right: 47px; }
     .icon-button { display: grid; place-items: center; border: 0; background: transparent; color: #929b88; border-radius: 6px; width: 38px; height: 38px; }
 
     .password-toggle { position: absolute; right: 6px; }
@@ -131,7 +157,7 @@ const style = `
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
     @media (hover: hover) { .icon-button:hover:not(:disabled) { background: #eef2e7; color: var(--green); } .captcha-image:hover:not(:disabled) { border-color: #9cae88; } .refresh:hover:not(:disabled) { color: var(--green); } .submit:hover:not(:disabled) { background: #1c4232; } }
     :root { color-scheme: light; }
-    .captcha-field { margin-bottom: 0; }
+    .captcha-field, .confirmation-field { margin-bottom: 0; }
     .captcha-image img { display: block; width: 100%; height: 100%; object-fit: contain; }
     .captcha-image img[hidden] { display: none; }
     button:disabled { cursor: default; opacity: .62; }
@@ -142,14 +168,29 @@ const style = `
 `
 
 /**
- * Render the Hengshu login with server-issued, one-use verification images.
+ * Render the visibility control beside its password field.
+ * @param field - ID of the input controlled by the button.
+ * @param label - localized action label for the initially masked input.
+ * @returns the button and its eye icon.
+ */
+function passwordToggleButton(field: 'password' | 'confirmation', label: string): string {
+  return `<button class="icon-button password-toggle" id="${field}-toggle" type="button" aria-label="${label}" title="${label}" aria-pressed="false" aria-controls="${field}">
+    <svg class="icon" aria-hidden="true"><use href="#eye"/></svg>
+  </button>`
+}
+
+/**
+ * Render the Hengshu Web entry for sign-in or first-account registration.
  * @param language - browser Accept-Language header.
  * @param nonce - response-specific CSP nonce.
+ * @param mode - sign-in with an image challenge, or registration with password confirmation.
  * @returns the document shown before DSH's authenticated app starts.
  */
-export function renderLoginPage(language: string | undefined, nonce: string): string {
+export function renderAuthPage(language: string | undefined, nonce: string, mode: 'login' | 'register'): string {
   const locale = /^(zh)(?:[-,;]|$)/iu.test(language?.trim() ?? '') ? 'zh' : 'en'
   const text = messages[locale]
+  const registering = mode === 'register'
+  const title = registering ? text.registration.title : text.title
   return `<!doctype html>
 <html lang="${locale}">
   <head>
@@ -157,7 +198,7 @@ export function renderLoginPage(language: string | undefined, nonce: string): st
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light">
     <meta name="theme-color" content="#f4f6f0">
-    <title>${text.title} · ${text.brand}</title>
+    <title>${title} · ${text.brand}</title>
     <style nonce="${nonce}">${style}</style>
   </head>
   <body>
@@ -182,9 +223,9 @@ export function renderLoginPage(language: string | undefined, nonce: string): st
           <h1>${text.heroStart}<span>${text.heroEnd}</span></h1>
           <p class="hero-description">${text.description}</p>
         </section>
-        <section class="login-content" aria-labelledby="login-title">
-          <h2 id="login-title">${text.welcome}</h2>
-          <form method="post" action="/auth/sessions" id="login">
+        <section class="login-content" aria-labelledby="auth-title">
+          <h2 id="auth-title">${registering ? text.registration.heading : text.welcome}</h2>
+          <form method="post" action="${registering ? registrationPath : '/auth/sessions'}" id="auth-form">
             <div class="field">
               <div class="label-row"><label for="username">${text.username}</label></div>
               <div class="input-wrap">
@@ -196,13 +237,20 @@ export function renderLoginPage(language: string | undefined, nonce: string): st
               <div class="label-row"><label for="password">${text.password}</label></div>
               <div class="input-wrap">
                 <svg class="icon" aria-hidden="true"><use href="#lock"/></svg>
-                <input id="password" name="password" type="password" placeholder="${text.passwordPlaceholder}" autocomplete="current-password" maxlength="1024" required>
-                <button class="icon-button password-toggle" id="password-toggle" type="button" aria-label="${text.showPassword}" title="${text.showPassword}" aria-pressed="false" aria-controls="password">
-                  <svg class="icon" aria-hidden="true"><use id="password-icon" href="#eye"/></svg>
-                </button>
+                <input id="password" name="password" type="password" maxlength="1024" required ${registering
+                  ? `placeholder="${text.registration.passwordPlaceholder}" autocomplete="new-password" minlength="${minimumPasswordLength}"`
+                  : `placeholder="${text.passwordPlaceholder}" autocomplete="current-password"`}>
+                ${passwordToggleButton('password', text.showPassword)}
               </div>
             </div>
-            <div class="field captcha-field">
+            ${registering ? `<div class="field confirmation-field">
+              <div class="label-row"><label for="confirmation">${text.registration.confirmation}</label></div>
+              <div class="input-wrap">
+                <svg class="icon" aria-hidden="true"><use href="#lock"/></svg>
+                <input id="confirmation" name="confirmation" type="password" placeholder="${text.registration.passwordPlaceholder}" autocomplete="new-password" maxlength="1024" required aria-describedby="error">
+                ${passwordToggleButton('confirmation', text.registration.showConfirmation)}
+              </div>
+            </div>` : `<div class="field captcha-field">
               <div class="label-row">
                 <label for="captcha">${text.captcha}</label>
                 <button class="refresh" id="refresh" type="button"><svg class="icon" aria-hidden="true"><use href="#refresh-icon"/></svg>${text.refresh}</button>
@@ -216,37 +264,84 @@ export function renderLoginPage(language: string | undefined, nonce: string): st
                   <img id="image" alt="${text.image}" width="116" height="50" hidden>
                 </button>
               </div>
-            </div>
+            </div>`}
             <p class="status" id="error" role="status" aria-live="polite"></p>
-            <button class="submit" id="submit" type="submit" disabled>${text.title}</button>
+            <button class="submit" id="submit" type="submit"${registering ? '' : ' disabled'}>${title}</button>
           </form>
         </section>
       </div>
     </main>
     <script nonce="${nonce}">
       const text = ${JSON.stringify(text)}
-      const form = document.getElementById('login')
+      const form = document.getElementById('auth-form')
       const error = document.getElementById('error')
-      const image = document.getElementById('image')
+      const submit = document.getElementById('submit')
+      const password = document.getElementById('password')
+
+      /**
+       * Connect an input to its own password visibility control.
+       * @param input - the masked password field.
+       * @param showLabel - localized action label when masked.
+       * @param hideLabel - localized action label when visible.
+       */
+      function bindPasswordToggle(input, showLabel, hideLabel) {
+        const button = document.getElementById(input.id + '-toggle')
+        const icon = button.querySelector('use')
+        button.addEventListener('click', () => {
+          const visible = input.type === 'password'
+          input.type = visible ? 'text' : 'password'
+          const label = visible ? hideLabel : showLabel
+          button.setAttribute('aria-label', label)
+          button.setAttribute('aria-pressed', String(visible))
+          button.title = label
+          icon.setAttribute('href', visible ? '#eye-off' : '#eye')
+        })
+      }
+
+      bindPasswordToggle(password, text.showPassword, text.hidePassword)
+      ${registering ? `const confirmation = document.getElementById('confirmation')
+      bindPasswordToggle(confirmation, text.registration.showConfirmation, text.registration.hideConfirmation)
+
+      /**
+       * Submit the first account and enter the app using the session cookie returned on success.
+       * @param event - browser form submission event.
+       */
+      async function register(event) {
+        event.preventDefault()
+        if (submit.disabled) return
+        if (password.value !== confirmation.value) {
+          error.dataset.state = 'error'
+          error.textContent = text.registration.mismatch
+          confirmation.focus()
+          return
+        }
+        const body = new URLSearchParams(new FormData(form))
+        submit.disabled = true
+        error.dataset.state = 'pending'
+        error.textContent = text.registration.pending
+        try {
+          const response = await fetch(form.action, { method: 'POST', body })
+          if (response.status === 201) {
+            window.location.replace('/')
+            return
+          }
+          if (response.status === 409) {
+            window.location.replace('${loginPath}')
+            return
+          }
+          error.textContent = response.status === 422 ? text.registration.invalid : text.registration.unavailable
+        } catch (errorRegistering) {
+          error.textContent = text.registration.unavailable
+        }
+        error.dataset.state = 'error'
+        submit.disabled = false
+      }
+
+      form.addEventListener('submit', register)` : `const image = document.getElementById('image')
       const refresh = document.getElementById('refresh')
       const captchaImage = document.getElementById('captcha-image')
-      const submit = document.getElementById('submit')
       const captcha = document.getElementById('captcha')
-      const password = document.getElementById('password')
-      const passwordToggle = document.getElementById('password-toggle')
-      const passwordIcon = document.getElementById('password-icon')
       let imageUrl
-
-      /** Toggle password visibility and its accessible action label. No parameters. */
-      function togglePassword() {
-        const visible = password.type === 'password'
-        password.type = visible ? 'text' : 'password'
-        const label = visible ? text.hidePassword : text.showPassword
-        passwordToggle.setAttribute('aria-label', label)
-        passwordToggle.setAttribute('aria-pressed', String(visible))
-        passwordToggle.title = label
-        passwordIcon.setAttribute('href', visible ? '#eye-off' : '#eye')
-      }
 
       /**
        * Replace the image after decoding while keeping the form visually stable.
@@ -324,11 +419,10 @@ export function renderLoginPage(language: string | undefined, nonce: string): st
         captcha.focus()
       }
 
-      passwordToggle.addEventListener('click', togglePassword)
       refresh.addEventListener('click', refreshChallenge)
       captchaImage.addEventListener('click', refreshChallenge)
       form.addEventListener('submit', signIn)
-      void loadChallenge()
+      void loadChallenge()`}
     </script>
   </body>
 </html>`

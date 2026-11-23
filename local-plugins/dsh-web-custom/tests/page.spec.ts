@@ -1,7 +1,32 @@
-/** Browser document behavior during asynchronous verification-image replacement. */
+/** Browser behavior for local sign-in and first-account registration. */
 import { JSDOM } from 'jsdom'
 import { expect, it, onTestFinished, vi } from 'vitest'
-import { renderLoginPage } from '../src/page.ts'
+import { renderAuthPage } from '../src/page.ts'
+
+it('shows the length hint on both registration password fields and toggles visibility independently', () => {
+  const page = new JSDOM(renderAuthPage('zh-CN', 'test-nonce', 'register'), { runScripts: 'dangerously' })
+  onTestFinished(() => page.window.close())
+  const document = page.window.document
+  const password = document.querySelector<HTMLInputElement>('#password')!
+  const confirmation = document.querySelector<HTMLInputElement>('#confirmation')!
+  const passwordToggle = document.querySelector<HTMLButtonElement>('[aria-controls="password"]')!
+  const confirmationToggle = document.querySelector<HTMLButtonElement>('[aria-controls="confirmation"]')!
+  expect(password.placeholder).toBe('至少 8 个字符')
+  expect(confirmation.placeholder).toBe(password.placeholder)
+  expect(confirmationToggle?.getAttribute('aria-label')).toBe('显示确认密码')
+  confirmation.value = 'test-pass'
+  confirmationToggle.click()
+  expect(confirmation.type).toBe('text')
+  expect(password.type).toBe('password')
+  expect(confirmationToggle.getAttribute('aria-label')).toBe('隐藏确认密码')
+
+  passwordToggle.click()
+  confirmationToggle.click()
+  expect(password.type).toBe('text')
+  expect(confirmation.type).toBe('password')
+  expect(confirmation.value).toBe('test-pass')
+  expect(confirmationToggle.getAttribute('aria-label')).toBe('显示确认密码')
+})
 
 /**
  * Mount the real login document with instance-local image and HTTP adapters.
@@ -11,7 +36,7 @@ async function startPage() {
   let response = Promise.resolve(new Response(new Blob(['initial image'])))
   let decoding = Promise.resolve()
   let imageNumber = 0
-  const page = new JSDOM(renderLoginPage('zh-CN', 'test-nonce'), {
+  const page = new JSDOM(renderAuthPage('zh-CN', 'test-nonce', 'login'), {
     url: 'http://localhost',
     runScripts: 'dangerously',
     beforeParse(window) {

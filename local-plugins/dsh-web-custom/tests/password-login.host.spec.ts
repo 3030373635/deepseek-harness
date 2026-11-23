@@ -9,7 +9,7 @@ import WebServer from '@deepseek-ai/dsh-host-webserver'
 import { afterEach, expect, it, vi } from 'vitest'
 import * as Authentication from '../src/index.ts'
 import * as Captcha from '../src/captcha.ts'
-import { createUser, openUsers } from '../src/users.ts'
+import * as Users from '../src/users.ts'
 import { RecordCredentials } from './browser-credentials.ts'
 
 let context: Context | undefined
@@ -82,9 +82,9 @@ it('signs in over HTTP through a trusted LAN authority and keeps the session bou
   const host = '192.168.50.2:3080'
   const publicOrigin = 'http://192.168.50.2:3080'
   const { origin, databasePath } = await start([host])
-  const database = await openUsers(databasePath)
+  const database = await Users.openUsers(databasePath)
   try {
-    await createUser(database, 'operator', 'test-only password')
+    await Users.createUser(database, 'operator', 'test-only password')
   } finally {
     database.close()
   }
@@ -132,7 +132,13 @@ it('refuses untrusted hosts and cross-origin challenge requests on the LAN HTTP 
 })
 
 it('redirects the unauthenticated Web entry and issues a PNG challenge', async () => {
-  const { origin } = await start()
+  const { origin, databasePath } = await start()
+  const database = await Users.openUsers(databasePath)
+  try {
+    await Users.createUser(database, 'operator', 'test-only password')
+  } finally {
+    database.close()
+  }
   const response = await fetch(`${origin}/`, { redirect: 'manual' })
   expect(response.status).toBe(303)
   expect(response.headers.get('location')).toBe('/login')
@@ -155,12 +161,67 @@ it('redirects the unauthenticated Web entry and issues a PNG challenge', async (
   expect(image.headers.get('set-cookie')).toContain('HttpOnly')
 })
 
+it('registers the first operator from the Web and closes setup after one account is created', async () => {
+  const { origin, databasePath } = await start()
+  const entry = await fetch(`${origin}/`, { redirect: 'manual' })
+  expect(entry.status).toBe(303)
+  expect(entry.headers.get('location')).toBe('/register')
+  const setup = await fetch(`${origin}/login`, { headers: { 'accept-language': 'zh-CN' } })
+  expect(new URL(setup.url).pathname).toBe('/register')
+  expect(setup.status).toBe(200)
+  const html = await setup.text()
+  expect(html).toContain('创建账号')
+  expect(html).toContain('autocomplete="new-password"')
+  expect(html).not.toContain('name="captcha"')
+
+  /** Submit a first-account form with the browser's source origin. */
+  function register(username: string, password: string, confirmation = password, source = origin): Promise<Response> {
+    return fetch(`${origin}/register`, {
+      method: 'POST', redirect: 'manual', headers: { origin: source },
+      body: new URLSearchParams({ username, password, confirmation }),
+    })
+  }
+
+  expect((await register('operator', 'lan-pass', 'lan-pass', 'https://example.invalid')).status).toBe(403)
+  expect((await register('operator', 'too few')).status).toBe(422)
+  expect((await register('operator', 'lan-pass', 'mismatch')).status).toBe(422)
+  expect((await register(' operator ', 'lan-pass')).status).toBe(422)
+
+  const prepareUser = Users.prepareUser
+  const bothPreparing = Promise.withResolvers<void>()
+  let preparing = 0
+  // Both requests pass the initial database check before either account can be inserted.
+  vi.spyOn(Users, 'prepareUser').mockImplementation(async (username, password) => {
+    preparing += 1
+    if (preparing === 2) bothPreparing.resolve()
+    await bothPreparing.promise
+    return prepareUser(username, password)
+  })
+  const attempts = await Promise.all([register('operator', 'lan-pass'), register('other', 'second-8')])
+  expect(attempts.map(response => response.status).sort()).toEqual([201, 409])
+  const winner = attempts[0].status === 201 ? 'operator' : 'other'
+  const cookie = attempts.find(response => response.status === 201)?.headers.get('set-cookie')?.split(';')[0] ?? ''
+  expect(await (await fetch(`${origin}/`, { headers: { cookie } })).text()).toBe('app')
+  expect(await (await fetch(`${origin}/auth/sessions/current`, { headers: { cookie } })).json()).toEqual({ username: winner })
+
+  const database = await Users.openUsers(databasePath)
+  try {
+    expect(database.prepare('SELECT username FROM users').all()).toEqual([{ username: winner }])
+  } finally {
+    database.close()
+  }
+  const closed = await fetch(`${origin}/register`, { redirect: 'manual' })
+  expect(closed.status).toBe(303)
+  expect(closed.headers.get('location')).toBe('/login')
+  expect((await register('late', 'latepass')).status).toBe(409)
+})
+
 it('consumes a CAPTCHA on the first attempt and admits only the signed session cookie', async () => {
   vi.spyOn(Captcha, 'createCaptchaCode').mockReturnValue('0123')
   const { origin, databasePath } = await start()
-  const database = await openUsers(databasePath)
+  const database = await Users.openUsers(databasePath)
   try {
-    await createUser(database, 'operator', 'test-only password')
+    await Users.createUser(database, 'operator', 'test-only password')
     const row = database.prepare('SELECT password_hash FROM users').get()
     expect(row?.password_hash).toMatch(/^\$argon2id\$/u)
   } finally {

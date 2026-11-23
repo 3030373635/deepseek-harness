@@ -55,11 +55,7 @@ DSH_CLIENT_COMMIT_HASH="$(git rev-parse HEAD)" docker compose build
 docker compose up -d --wait
 ```
 
-在交互式终端中创建本地账号，然后在浏览器中打开 `DSH_PUBLIC_URL`。命令会要求输入并确认密码，且不回显密码。[定制插件文档](../../local-plugins/dsh-web-custom/README.zh.md)说明账号权限和认证行为。
-
-```sh
-docker compose exec --user node dsh node /app/local-plugins/dsh-web-custom/lib/create-user.js operator
-```
+在浏览器中打开 `DSH_PUBLIC_URL`。全新部署会进入注册页，创建首个本地账号后自动登录。请在其他用户能访问服务前完成这一步。已有账号的部署使用原账号登录。账号权限和认证行为见[定制插件文档](../../local-plugins/dsh-web-custom/README.zh.md)。
 
 将项目放入 `volumes/data/workspace/`，或把 `compose.yaml` 中该绑定挂载的来源改为服务器上的现有目录。应用及其命令通过 `/workspace` 访问该目录，并通过已配置的挂载访问宿主机文件。
 
@@ -144,7 +140,7 @@ chmod 700 volumes/config/.dsh
 通过服务日志区分传输、认证和命令沙箱失败。
 
 - **403：**确保浏览器使用与 `DSH_PUBLIC_URL` 一致的地址及端口。浏览器地址需与该 origin 一致，不要通过改写 `Host` 或 `Origin` 绕过 DSH 来源检查。
-- **DSH 不健康：**查看其日志。无效的公开 URL、缺失构建产物或必需插件失败会阻止就绪。健康检查使用配置的公开 Host 请求容器登录页。
+- **DSH 不健康：**查看其日志。无效的公开 URL、缺失构建产物或必需插件失败会阻止就绪。健康检查使用配置的公开 Host 请求容器登录页，并跟随首次注册重定向。
 - **无法连接：**检查 `DSH_BIND_ADDRESS`、`DSH_HTTP_PORT` 和服务器防火墙。使用 `http://` 以及配置的发布端口。
 - **沙箱不可用：**网页可访问并不表示命令限制可用。部分 Docker Desktop 内核缺少 Landlock，并禁止用户命名空间；依赖受限执行前需验证 Linux 服务器。不要通过特权模式或停用产品沙箱掩盖该失败。
 

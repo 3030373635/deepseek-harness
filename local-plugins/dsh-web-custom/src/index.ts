@@ -7,10 +7,10 @@ import type { ConnectionTrustRequest } from '@deepseek-ai/dsh-client-connection'
 import type {} from '@deepseek-ai/dsh-host-webserver'
 import z from '@deepseek-ai/schemastery'
 import { createCaptchaCode, renderCaptcha } from './captcha.ts'
-import { renderLoginPage } from './page.ts'
-import { currentSessionPath, loginPath } from './routes.ts'
+import { renderAuthPage } from './page.ts'
+import { currentSessionPath, loginPath, registrationPath } from './routes.ts'
 import { initializeSessionKey, issueSession, readSession } from './session.ts'
-import { openUsers, verifyUser } from './users.ts'
+import { insertFirstUser, openUsers, prepareUser, verifyUser } from './users.ts'
 
 /** Standalone Cordis authentication plugin name. */
 export const name = 'web-password-login'
@@ -153,6 +153,22 @@ function reply(response: ServerResponse, status: number, headers: Record<string,
 }
 
 /**
+ * Serve an authentication document with a response-specific CSP nonce.
+ * @param request - browser GET or HEAD request.
+ * @param response - active HTTP response.
+ * @param mode - document to render.
+ */
+function replyAuthPage(request: IncomingMessage, response: ServerResponse, mode: 'login' | 'register'): void {
+  const nonce = randomBytes(18).toString('base64')
+  const page = request.method === 'HEAD' ? undefined : withFavicon(renderAuthPage(request.headers['accept-language'], nonce, mode))
+  reply(response, 200, {
+    'content-type': 'text/html; charset=utf-8',
+    'content-security-policy': `default-src 'none'; script-src 'nonce-${nonce}'; style-src 'nonce-${nonce}'; img-src 'self' blob:; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'`,
+    'referrer-policy': 'same-origin',
+  }, page)
+}
+
+/**
  * Mount password login for Web without activating the launch-token provider.
  * @param ctx - plugin scope owning the Web routes, operator Peer and database.
  * @param config - validated password settings.
@@ -176,7 +192,21 @@ export async function apply(ctx: Context, config: PasswordLoginConfig): Promise<
   }, 'host-web-password: user database')
   /** @returns whether the provider may still sign a session after an asynchronous operation. */
   const canSignIn = (): boolean => active
+  const anyUser = users.prepare('SELECT 1 FROM users LIMIT 1')
+  const hasUsers = () => anyUser.get() !== undefined
   const userById = users.prepare('SELECT username FROM users WHERE id = ?')
+  /**
+   * Start a browser session for an operator who has been verified or created.
+   * @param response - active HTTP response.
+   * @param userId - persisted operator ID.
+   * @param origin - trusted public origin.
+   */
+  const replySessionCreated = (response: ServerResponse, userId: string, origin: string): void => {
+    const token = issueSession(secret, userId, origin, config.sessionSeconds)
+    reply(response, 201, {
+      'set-cookie': writeCookie(cookieName(origin, 'session'), token, config.sessionSeconds, config.secureCookies, '/'),
+    })
+  }
   /**
    * Read the local account for this request's verified session.
    * @param request - request admitted by the connection trust policy.
@@ -208,7 +238,7 @@ export async function apply(ctx: Context, config: PasswordLoginConfig): Promise<
         && (request.url?.split('?')[0] === '/' || request.url?.split('?')[0] === '/index.html')) {
         const admission = web.connection.admit(request)
         if ('rejection' in admission && admission.rejection === 401) {
-          reply(response, 303, { location: loginPath })
+          reply(response, 303, { location: hasUsers() ? loginPath : registrationPath })
           return
         }
       }
@@ -225,15 +255,53 @@ export async function apply(ctx: Context, config: PasswordLoginConfig): Promise<
           reply(response, 303, { location: '/' })
           return
         }
-        const nonce = randomBytes(18).toString('base64')
-        const page = withFavicon(renderLoginPage(request.headers['accept-language'], nonce))
-        reply(response, 200, {
-          'content-type': 'text/html; charset=utf-8',
-          'content-security-policy': `default-src 'none'; script-src 'nonce-${nonce}'; style-src 'nonce-${nonce}'; img-src 'self' blob:; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'`,
-          'referrer-policy': 'same-origin',
-        }, request.method === 'HEAD' ? undefined : page)
+        if (!hasUsers()) {
+          reply(response, 303, { location: registrationPath })
+          return
+        }
+        replyAuthPage(request, response, 'login')
       },
     }), 'host-web-password: login page')
+    web.effect(() => web.webServer.register({
+      kind: 'exact', path: registrationPath, auth: 'anonymous',
+      async handler(request, response) {
+        if (request.method === 'GET' || request.method === 'HEAD') {
+          if (hasUsers()) reply(response, 303, { location: loginPath })
+          else replyAuthPage(request, response, 'register')
+          return
+        }
+        if (request.method !== 'POST') {
+          reply(response, 405, { allow: 'GET, HEAD, POST' })
+          return
+        }
+        const origin = admitPost(request, response, config.secureCookies)
+        if (origin === undefined) return
+        if (hasUsers()) { reply(response, 409); return }
+        const fields = await readForm(request)
+        if (request.destroyed && !request.complete) return
+        if (!canSignIn()) { reply(response, 503); return }
+        const username = fields?.get('username')
+        const password = fields?.get('password')
+        if (!username || !password || fields?.get('confirmation') !== password) {
+          reply(response, 422)
+          return
+        }
+        if (checksInProgress >= config.concurrentPasswordChecks) {
+          reply(response, 429)
+          return
+        }
+        checksInProgress += 1
+        try {
+          const user = await prepareUser(username, password)
+          if (!canSignIn()) { reply(response, 503); return }
+          if ('error' in user) { reply(response, 422); return }
+          if (!insertFirstUser(users, user)) { reply(response, 409); return }
+          replySessionCreated(response, user.id, origin)
+        } finally {
+          checksInProgress -= 1
+        }
+      },
+    }), 'host-web-password: first account registration')
     web.effect(() => web.webServer.register({
       kind: 'exact', path: captchaPath, auth: 'anonymous',
       async handler(request, response) {
@@ -300,10 +368,7 @@ export async function apply(ctx: Context, config: PasswordLoginConfig): Promise<
             reply(response, 401)
             return
           }
-          const token = issueSession(secret, id, origin, config.sessionSeconds)
-          reply(response, 201, {
-            'set-cookie': writeCookie(cookieName(origin, 'session'), token, config.sessionSeconds, config.secureCookies, '/'),
-          })
+          replySessionCreated(response, id, origin)
         } finally {
           checksInProgress -= 1
         }

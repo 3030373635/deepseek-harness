@@ -55,11 +55,7 @@ DSH_CLIENT_COMMIT_HASH="$(git rev-parse HEAD)" docker compose build
 docker compose up -d --wait
 ```
 
-Create a local account in an interactive terminal, then open `DSH_PUBLIC_URL` in your browser. The command requests and confirms the password without echoing it. The [custom plugin documentation](../../local-plugins/dsh-web-custom/README.md) describes account permissions and authentication.
-
-```sh
-docker compose exec --user node dsh node /app/local-plugins/dsh-web-custom/lib/create-user.js operator
-```
+Open `DSH_PUBLIC_URL` in your browser. On a fresh deployment, the registration page creates the first local account and signs you in. Complete this step before making the service reachable by other users. If the deployment already has an account, sign in with your existing credentials. See the [custom plugin documentation](../../local-plugins/dsh-web-custom/README.md) for account permissions and authentication.
 
 Place projects under `volumes/data/workspace/`, or change its bind-mount source in `compose.yaml` to an existing server directory. The application and its commands see that directory as `/workspace` and access host files through the configured mounts.
 
@@ -144,7 +140,7 @@ For an existing HTTPS deployment, follow the [HTTP migration guide](../../docs/u
 Use service logs to distinguish transport, authentication, and command-sandbox failures.
 
 - **403:** ensure the browser uses exactly `DSH_PUBLIC_URL`, including its port. Keep the browser address consistent with this origin; do not rewrite `Host` or `Origin` to bypass DSH source checks.
-- **Unhealthy DSH:** inspect its logs. An invalid public URL, missing build artifacts, or a failed required plugin prevents readiness. The health check sends the configured public Host to the container’s login page.
+- **Unhealthy DSH:** inspect its logs. An invalid public URL, missing build artifacts, or a failed required plugin prevents readiness. The health check sends the configured public Host to the container’s login page and follows the initial registration redirect.
 - **Connection refused:** check `DSH_BIND_ADDRESS`, `DSH_HTTP_PORT`, and the server firewall. Use `http://`, with the configured published port.
 - **Sandbox unavailable:** a working Web page does not establish command confinement. Some Docker Desktop kernels lack Landlock and deny user namespaces; validate the Linux server before relying on restricted execution. Do not add privileged mode or disable the product sandbox to hide this failure.
 

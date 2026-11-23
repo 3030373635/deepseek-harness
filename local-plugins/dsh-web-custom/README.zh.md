@@ -8,15 +8,12 @@
 
 使用 Node.js 24.9 或更新版本。在 DSH 仓库根目录先执行 `pnpm install` 和 `pnpm run build:artifacts`。本插件位于 fork 的 `local-plugins/` 目录，自带依赖清单和锁文件。它的开发依赖使用当前 checkout 生成的 DSH 类型和运行产物。
 
-继续在 DSH 仓库根目录构建插件并创建账号。
+继续在 DSH 仓库根目录构建插件。
 
 ```sh
 pnpm -C local-plugins/dsh-web-custom install --frozen-lockfile
 pnpm -C local-plugins/dsh-web-custom run build
-node local-plugins/dsh-web-custom/lib/create-user.js operator
 ```
-
-创建命令会在本机终端隐藏密码输入。包内命令名为 `dsh-web-custom-user`。默认数据库是 `${DSH_HOME:-$HOME/.dsh}/auth/users.sqlite`。已有数据库使用同一路径，原有账号可以继续登录。每个账号获得该 DSH 实例的所有者权限。
 
 首次启用时，将组合包安装到 `web` profile，再启动 Web。如果 profile 已安装旧名称 `dsh-web-login`，请先按下文迁移。
 
@@ -26,6 +23,10 @@ pnpm dsh web
 ```
 
 如果 `web` profile 尚未初始化，安装前先执行 `pnpm dsh web --dump-config`。安装会写入 Web profile 及其依赖清单。插件组合包停用默认的启动 Token 认证并挂载密码认证，之后直接启动 Web 即可。
+
+打开 Web，创建首个本地账号后会自动登录。新密码至少需要 8 个字符。密码和确认密码输入框各自支持显隐切换。账号数据库中已有用户时，Web 注册入口关闭。每个本地账号都拥有实例的所有者权限，因此请在创建首个账号前限制对实例的网络访问。默认数据库是 `${DSH_HOME:-$HOME/.dsh}/auth/users.sqlite`。
+
+如需在交互式终端中创建账号，运行 `node local-plugins/dsh-web-custom/lib/create-user.js operator`。命令会提示输入密码，且不回显。
 
 登录页和主界面的浏览器标签页使用衡枢 Logo。登录后，Web 左上角显示衡枢 Logo 和名称，收起侧栏时只显示 Logo。新会话标题前也显示衡枢 Logo，标题旁的预览版徽标由插件样式隐藏。该样式依赖首页标题与徽标的相邻结构，上游升级后需验证。左下角显示本地用户名和首字母头像。点击头像后，菜单在账号行上方展开，左边缘与账号行对齐，可打开设置或退出当前浏览器的本地会话。插件停用 Web 中的 DeepSeek 登录服务、账号模型路由、「账号与余额」设置页及账号通知。
 
@@ -60,7 +61,7 @@ pnpm dsh web
 
 组合包通过 `ui-settings-models.config.credentialOnboarding: false` 关闭 API Key 自动引导。API Key 可在「设置 → 模型」中配置。要恢复自动引导，在 Web profile 的 `cordis.patch.yml` 中把该字段覆盖为 `true`。
 
-组合包根据 Web 入口的 TLS 或 HTTPS 公共地址设置 Secure Cookie。HTTP 也支持 DSH 受信任 Host 策略接受的局域网地址。登录和退出要求浏览器 Origin 与 Cookie audience 一致；Cookie 保持 HttpOnly 和 SameSite=Strict。HTTP 不加密密码和会话 Cookie，因此只用于可信局域网。
+组合包根据 Web 入口的 TLS 或 HTTPS 公共地址设置 Secure Cookie。HTTP 也支持 DSH 受信任 Host 策略接受的局域网地址。注册、登录和退出均要求浏览器 Origin 与 Cookie audience 一致。Cookie 使用 HttpOnly 和 SameSite=Strict。HTTP 不加密密码和会话 Cookie，因此只用于可信局域网。
 
 Linux 服务器部署见 [Docker Compose 部署指南](../../deploy/compose/README.zh.md)，其中提供 Node 镜像、直接提供局域网 HTTP 的监听配置、持久化数据卷和账号初始化步骤。
 

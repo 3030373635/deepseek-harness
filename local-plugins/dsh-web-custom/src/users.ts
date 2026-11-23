@@ -9,6 +9,15 @@ const algorithm = '$argon2id$v=19$m=19456,t=2,p=1$'
 const dummySalt = Buffer.alloc(16)
 const dummyDigest = Buffer.alloc(32)
 
+/** Minimum character count for new Web passwords. */
+export const minimumPasswordLength = 8
+
+interface NewUser {
+  id: string
+  username: string
+  hash: string
+}
+
 type Argon2 = (
   name: 'argon2id',
   parameters: typeof options & { message: string; nonce: Buffer },
@@ -62,23 +71,49 @@ export async function openUsers(path: string): Promise<DatabaseSync> {
 }
 
 /**
+ * Validate and hash credentials for a new local operator.
+ * @param username - unique login name.
+ * @param password - operator password held in memory during hashing.
+ * @returns a record ready for insertion, or a validation message.
+ */
+export async function prepareUser(username: string, password: string): Promise<NewUser | { error: string }> {
+  if (username.length < 1 || username.length > 80 || username.trim() !== username) {
+    return { error: 'Username must contain 1–80 characters with no surrounding whitespace' }
+  }
+  if (Buffer.byteLength(password) > 1024 || [...password].length < minimumPasswordLength) {
+    return { error: `Password must contain at least ${minimumPasswordLength} characters and at most 1024 UTF-8 bytes` }
+  }
+  const salt = crypto.randomBytes(16)
+  const digest = await hashPassword(password, salt)
+  const encoded = algorithm + salt.toString('base64').replace(/=+$/u, '') + '$' + digest.toString('base64').replace(/=+$/u, '')
+  return { id: crypto.randomBytes(16).toString('hex'), username, hash: encoded }
+}
+
+/**
+ * Persist the first operator only if the account table is empty at insertion time.
+ * @param database - open account database.
+ * @param user - validated, hashed credentials.
+ * @returns whether this operator was inserted.
+ */
+export function insertFirstUser(database: DatabaseSync, user: NewUser): boolean {
+  const result = database.prepare(`
+    INSERT INTO users (id, username, password_hash, created_at)
+    SELECT ?, ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM users)
+  `).run(user.id, user.username, user.hash, new Date().toISOString())
+  return result.changes === 1
+}
+
+/**
  * Insert a local operator with access to the DSH instance.
  * @param database - open account database.
  * @param username - unique login name.
  * @param password - operator password held in memory during hashing.
  */
 export async function createUser(database: DatabaseSync, username: string, password: string): Promise<void> {
-  if (username.length < 1 || username.length > 80 || username.trim() !== username) {
-    throw new Error('Username must contain 1–80 characters with no surrounding whitespace')
-  }
-  if (password.length < 12 || Buffer.byteLength(password) > 1024) {
-    throw new Error('Password must contain at least 12 characters and at most 1024 UTF-8 bytes')
-  }
-  const salt = crypto.randomBytes(16)
-  const digest = await hashPassword(password, salt)
-  const encoded = algorithm + salt.toString('base64').replace(/=+$/u, '') + '$' + digest.toString('base64').replace(/=+$/u, '')
-  const id = crypto.randomBytes(16).toString('hex')
-  database.prepare('INSERT INTO users VALUES (?, ?, ?, ?)').run(id, username, encoded, new Date().toISOString())
+  const user = await prepareUser(username, password)
+  if ('error' in user) throw new Error(user.error)
+  database.prepare('INSERT INTO users (id, username, password_hash, created_at) VALUES (?, ?, ?, ?)')
+    .run(user.id, user.username, user.hash, new Date().toISOString())
 }
 
 /**

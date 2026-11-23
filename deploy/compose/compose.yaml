@@ -35,13 +35,19 @@ services:
         - -e
         - >-
           import http from 'node:http';
-          const request = http.get('http://dsh:3080/login', {
-            headers: { host: new URL(process.env.DSH_PUBLIC_URL).host }
-          }, response => {
-            response.resume();
-            if (response.statusCode !== 200) process.exitCode = 1;
-          });
-          request.on('error', () => { process.exitCode = 1; });
+          const headers = { host: new URL(process.env.DSH_PUBLIC_URL).host };
+          function check(path) {
+            const request = http.get('http://dsh:3080' + path, { headers }, response => {
+              response.resume();
+              if (path === '/login' && response.statusCode === 303 && response.headers.location === '/register') {
+                check('/register');
+              } else if (response.statusCode !== 200) {
+                process.exitCode = 1;
+              }
+            });
+            request.on('error', () => { process.exitCode = 1; });
+          }
+          check('/login');
       interval: 10s
       timeout: 5s
       start_period: 60s
