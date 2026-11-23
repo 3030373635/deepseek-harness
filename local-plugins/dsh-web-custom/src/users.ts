@@ -3,6 +3,7 @@ import * as crypto from 'node:crypto'
 import { closeSync, mkdirSync, openSync } from 'node:fs'
 import { dirname, isAbsolute } from 'node:path'
 import type { DatabaseSync } from 'node:sqlite'
+import { pathToFileURL } from 'node:url'
 
 const options = { parallelism: 1, memory: 19 * 1024, passes: 2, tagLength: 32 }
 const algorithm = '$argon2id$v=19$m=19456,t=2,p=1$'
@@ -44,13 +45,23 @@ function hashPassword(password: string, salt: Buffer): Promise<Buffer> {
 }
 
 /**
- * Open the account database and create its initial schema.
+ * Open the account database for Web or for password recovery.
  * @param path - absolute path in the deployment's private data directory.
+ * @param mode - defaults to creating the database and schema when absent. Existing mode requires a writable database file and leaves its schema as-is.
  * @returns the database owned by the caller, which must close it.
  */
-export async function openUsers(path: string): Promise<DatabaseSync> {
+export async function openUsers(path: string, mode: 'create' | 'existing' = 'create'): Promise<DatabaseSync> {
   if (!isAbsolute(path)) throw new Error('Web account databasePath must be absolute')
   const { DatabaseSync } = await import('node:sqlite')
+  if (mode === 'existing') {
+    const url = pathToFileURL(path)
+    url.searchParams.set('mode', 'rw')
+    try {
+      return new DatabaseSync(url.href)
+    } catch (error) {
+      throw new Error(`Cannot open the Web account database at ${JSON.stringify(path)}. Check the Web data directory and write permissions.`, { cause: error })
+    }
+  }
   mkdirSync(dirname(path), { recursive: true, mode: 0o700 })
   closeSync(openSync(path, 'a', 0o600))
   const database = new DatabaseSync(path)
@@ -71,7 +82,7 @@ export async function openUsers(path: string): Promise<DatabaseSync> {
 }
 
 /**
- * Validate and hash credentials for a new local operator.
+ * Validate and hash credentials before creating or updating a local operator.
  * @param username - unique login name.
  * @param password - operator password held in memory during hashing.
  * @returns a record ready for insertion, or a validation message.
@@ -117,11 +128,26 @@ export async function createUser(database: DatabaseSync, username: string, passw
 }
 
 /**
+ * Replace an existing operator's password and invalidate their previous browser cookies.
+ * @param database - open existing account database.
+ * @param username - exact login name of the existing operator.
+ * @param password - replacement password held in memory during hashing.
+ * @throws Error when the credentials fail validation or the account does not exist.
+ */
+export async function resetPassword(database: DatabaseSync, username: string, password: string): Promise<void> {
+  const user = await prepareUser(username, password)
+  if ('error' in user) throw new Error(user.error)
+  const result = database.prepare('UPDATE users SET id = ?, password_hash = ? WHERE username = ?')
+    .run(user.id, user.hash, user.username)
+  if (result.changes === 0) throw new Error('No Web login account has that username. Check the username and try again.')
+}
+
+/**
  * Check submitted credentials with one Argon2id computation even for an unknown username.
  * @param database - open account database.
  * @param username - supplied login name.
  * @param password - supplied password.
- * @returns the stable user ID when the password matches.
+ * @returns the account ID from the verified password record, which a reset can replace.
  */
 export async function verifyUser(database: DatabaseSync, username: string, password: string): Promise<string | undefined> {
   const row = database.prepare('SELECT id, password_hash FROM users WHERE username = ?').get(username)

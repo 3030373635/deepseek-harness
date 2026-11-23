@@ -364,7 +364,7 @@ export async function apply(ctx: Context, config: PasswordLoginConfig): Promise<
         try {
           const id = await verifyUser(users, username, password)
           if (!canSignIn()) { reply(response, 503); return }
-          if (id === undefined) {
+          if (id === undefined || userById.get(id) === undefined) {
             reply(response, 401)
             return
           }

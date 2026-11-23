@@ -101,6 +101,12 @@ docker compose logs --tail=100 dsh
 docker compose stop
 ```
 
+忘记 Web 密码时，在容器运行期间从 `deploy/compose/` 执行以下命令。将 `operator` 换成已有用户名，再按提示输入新密码。
+
+```sh
+docker compose exec --user node dsh node /app/local-plugins/dsh-web-custom/lib/reset-password.js operator
+```
+
 迁移现有部署时，先停止服务，再复制数据。在重新创建或移除旧容器前，从 `deploy/compose/` 执行适用的复制命令。确认目标目录尚不存在，避免混入其他部署的数据。
 
 ```sh

@@ -216,6 +216,53 @@ it('registers the first operator from the Web and closes setup after one account
   expect((await register('late', 'latepass')).status).toBe(409)
 })
 
+it('accepts a reset password and revokes only the target account’s previous cookies', async () => {
+  vi.spyOn(Captcha, 'createCaptchaCode').mockReturnValue('0123')
+  const { origin, databasePath } = await start()
+  const database = await Users.openUsers(databasePath, 'existing')
+  try {
+    await Users.createUser(database, 'operator', 'original password')
+    await Users.createUser(database, 'other', 'unchanged password')
+
+    /** Sign in with a fresh image challenge for each password attempt. */
+    async function signIn(username: string, password: string): Promise<Response> {
+      const challenge = await fetch(`${origin}/auth/challenges`, { method: 'POST', headers: { origin } })
+      expect(challenge.status).toBe(201)
+      await challenge.arrayBuffer()
+      const cookie = challenge.headers.get('set-cookie')?.split(';')[0] ?? ''
+      return fetch(`${origin}/auth/sessions`, {
+        method: 'POST', headers: { origin, cookie }, body: new URLSearchParams({ username, password, captcha: '0123' }),
+      })
+    }
+
+    const original = await signIn('operator', 'original password')
+    const other = await signIn('other', 'unchanged password')
+    expect(original.status).toBe(201)
+    expect(other.status).toBe(201)
+    const originalCookie = original.headers.get('set-cookie')?.split(';')[0] ?? ''
+    const otherCookie = other.headers.get('set-cookie')?.split(';')[0] ?? ''
+    const readCreation = () => database.prepare('SELECT created_at FROM users WHERE username = ?').get('operator')
+    const created = readCreation()
+
+    await expect(Users.resetPassword(database, 'missing', 'resetpass')).rejects.toThrow('No Web login account')
+    await expect(Users.resetPassword(database, 'operator', 'short')).rejects.toThrow('at least 8 characters')
+    const current = `${origin}/auth/sessions/current`
+    expect((await fetch(current, { headers: { cookie: originalCookie } })).status).toBe(200)
+
+    await Users.resetPassword(database, 'operator', 'resetpass')
+    expect(readCreation()).toEqual(created)
+    expect((await fetch(current, { headers: { cookie: originalCookie } })).status).toBe(401)
+    expect((await fetch(current, { headers: { cookie: otherCookie } })).status).toBe(200)
+    expect((await signIn('operator', 'original password')).status).toBe(401)
+    const replacement = await signIn('operator', 'resetpass')
+    expect(replacement.status).toBe(201)
+    const newCookie = replacement.headers.get('set-cookie')?.split(';')[0] ?? ''
+    expect(await (await fetch(current, { headers: { cookie: newCookie } })).json()).toEqual({ username: 'operator' })
+  } finally {
+    database.close()
+  }
+})
+
 it('consumes a CAPTCHA on the first attempt and admits only the signed session cookie', async () => {
   vi.spyOn(Captcha, 'createCaptchaCode').mockReturnValue('0123')
   const { origin, databasePath } = await start()

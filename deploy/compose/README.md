@@ -101,6 +101,12 @@ docker compose logs --tail=100 dsh
 docker compose stop
 ```
 
+To reset a forgotten Web password, run the following from `deploy/compose/` while the container is running. Replace `operator` with the existing username and enter the new password at the prompts.
+
+```sh
+docker compose exec --user node dsh node /app/local-plugins/dsh-web-custom/lib/reset-password.js operator
+```
+
 To migrate an existing deployment, stop it before copying its data. Run the applicable copy commands from `deploy/compose/` before recreating or removing the old container. Start with absent destination directories so the copy cannot merge with data from another deployment.
 
 ```sh

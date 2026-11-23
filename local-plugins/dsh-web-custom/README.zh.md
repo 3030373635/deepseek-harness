@@ -65,7 +65,17 @@ pnpm dsh web
 
 Linux 服务器部署见 [Docker Compose 部署指南](../../deploy/compose/README.zh.md)，其中提供 Node 镜像、直接提供局域网 HTTP 的监听配置、持久化数据卷和账号初始化步骤。
 
-如需自定义数据库路径或会话期限，在 Web profile 的 `cordis.patch.yml` 中覆盖 `web-password-login` 的完整 `config`。数据库路径需为绝对路径，创建账号时也可以把该路径作为第二个参数。JWT 默认有效 8 小时，图片验证码默认有效 3 分钟。
+如需自定义数据库路径或会话期限，在 Web profile 的 `cordis.patch.yml` 中覆盖 `web-password-login` 的完整 `config`。数据库路径需为绝对路径。JWT 默认有效 8 小时，图片验证码默认有效 3 分钟。
+
+## 重置 Web 密码
+
+在仓库根目录的交互式终端中运行重置命令，传入已有用户名。命令要求输入两次新密码，输入不会回显，并使该账号的旧登录 Cookie 失效。命令成功后即可用新密码重新登录。
+
+```sh
+node local-plugins/dsh-web-custom/lib/reset-password.js operator
+```
+
+执行时使用与 Web 相同的 `DSH_HOME`。如果 Web 使用自定义数据库路径，创建账号和重置密码时都可以把该绝对路径作为第二个参数传入。
 
 ## 上游升级
 

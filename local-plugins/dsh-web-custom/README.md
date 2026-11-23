@@ -65,7 +65,17 @@ The composition bundle sets Secure cookies according to the Web entry’s TLS co
 
 For Linux servers, the [Docker Compose deployment guide](../../deploy/compose/README.md) provides the Node image, direct LAN HTTP listener, persistent volumes, and account initialization steps.
 
-To customize the database path or session duration, override the complete `config` of `web-password-login` in the Web profile’s `cordis.patch.yml`. The database path must be absolute; the account creation command also accepts it as its second argument. JWTs are valid for eight hours by default, and verification images for three minutes.
+To customize the database path or session duration, override the complete `config` of `web-password-login` in the Web profile’s `cordis.patch.yml`. The database path must be absolute. JWTs are valid for eight hours by default, and verification images for three minutes.
+
+## Reset a Web password
+
+From an interactive terminal in the repository root, pass the existing username to the reset command. It prompts for the new password twice with hidden input and invalidates the account’s old login cookies. Sign in again with the new password as soon as the command succeeds.
+
+```sh
+node local-plugins/dsh-web-custom/lib/reset-password.js operator
+```
+
+Run the command with the same `DSH_HOME` as Web. If Web uses a custom database path, pass that absolute path as the second argument to either account maintenance command.
 
 ## Upstream upgrades
 

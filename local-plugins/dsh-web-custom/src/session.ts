@@ -33,7 +33,7 @@ export async function initializeSessionKey(credentials: CredentialProvider): Pro
 /**
  * Issue a signed JWT with an absolute expiry and request authority as audience.
  * @param secret - signing key.
- * @param userId - stable authenticated account ID.
+ * @param userId - current authenticated account ID, replaced on password reset.
  * @param audience - public origin derived from the admitted request.
  * @param lifetime - validity in seconds.
  * @returns a compact JWT suitable for an HttpOnly cookie.
