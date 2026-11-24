@@ -8,7 +8,7 @@ description: "通过 Docker Compose、局域网 HTTP 和持久化数据，在 Li
 
 ## 概述
 
-在 Linux 服务器上运行定制 Web 应用，并通过局域网 HTTP 访问。镜像使用 `node:24-trixie` 构建当前源码，直接提供 HTTP 和 WebSocket 服务。宿主机目录保存 skill、账号、配置、签名密钥和会话，独立目录提供 Agent 工作区。受限命令执行还需要可用的 Linux 沙箱后端。
+在 Linux 服务器上运行定制 Web 应用，并通过局域网 HTTP 访问。镜像使用 `node:24.22.3-trixie` 构建当前源码，直接提供 HTTP 和 WebSocket 服务。宿主机目录保存 skill、账号、配置、签名密钥和会话，独立目录提供 Agent 工作区。受限命令执行还需要可用的 Linux 沙箱后端。
 
 ## 目录
 

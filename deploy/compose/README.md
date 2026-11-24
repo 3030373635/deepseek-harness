@@ -8,7 +8,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-Run the customized Web application on a Linux server and access it over LAN HTTP. The image builds this checkout with `node:24-trixie` and serves HTTP and WebSocket traffic directly. A host directory preserves skills, accounts, configuration, signing keys, and sessions, while a separate directory supplies the agent workspace. Restricted command execution also requires a usable Linux sandbox backend.
+Run the customized Web application on a Linux server and access it over LAN HTTP. The image builds this checkout with `node:24.22.3-trixie` and serves HTTP and WebSocket traffic directly. A host directory preserves skills, accounts, configuration, signing keys, and sessions, while a separate directory supplies the agent workspace. Restricted command execution also requires a usable Linux sandbox backend.
 
 ## Table of Contents
 

@@ -1,4 +1,4 @@
-FROM node:24-trixie
+FROM node:24.22.3-trixie
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
