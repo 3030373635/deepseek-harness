@@ -86,7 +86,7 @@ The environment file controls the deployment address, the workspace picker's sta
 | `DSH_NPM_REGISTRY` | Optional build registry; empty or absent uses `https://registry.npmjs.org`. |
 | `DSH_CLIENT_COMMIT_HASH` | Build-time source commit, supplied by the build command. |
 
-The entrypoint sets the `node` account to the configured UID/GID, assigns the private data volume to that account when necessary, and runs DSH as that account. It leaves host workspace ownership unchanged. It initializes the Web profile and installs the bundled local customization on each start. It uses the compiled `dsh` CLI and an owned browser-directory-picker overlay. The image does not include a pre-created account.
+The entrypoint sets the `node` account to the configured UID/GID, assigns the private data volume to that account when necessary, and runs DSH as that account. It leaves host workspace ownership unchanged. The image's launch overlays control local login, interface customizations, and the browser directory picker. **Plugins → Built-in plugin settings → Hengshu customization** shows read-only information about local login and branding. To change the deployment's customizations, edit the image's launch overlays and rebuild. The image does not include a pre-created account.
 
 -----
 

@@ -42,13 +42,44 @@ fi
 
 # The listener requires a concrete container address rather than a wildcard.
 bind_host=$(hostname -i | awk '{print $1}')
-cd /app
-node /app/apps/cli/lib/bin.js web --dump-config >/dev/null
-node /app/apps/cli/lib/bin.js plugin --profile web add /app/local-plugins/dsh-web-custom
+
+# Retire the old profile installation before loading the image-owned overlays.
+cd /app/apps/cli
+legacy_custom_bundle=$(node --input-type=module -e '
+    import { existsSync } from "node:fs";
+    import { join } from "node:path";
+    import { withFileLock } from "@deepseek-ai/dsh-atomic-write";
+    import { readProfileManifest, resolveProfileDir } from "@deepseek-ai/dsh-app-boot";
+    import { saveManifest } from "@deepseek-ai/dsh-plugin-manager/operations";
+
+    const name = "dsh-web-custom";
+    const dir = resolveProfileDir("web");
+    const manifestPath = join(dir, "package.json");
+    if (!existsSync(manifestPath)) process.exit(0);
+    await withFileLock(manifestPath, async () => {
+        const manifest = readProfileManifest("dsh", dir);
+        if (Object.hasOwn(manifest.dependencies ?? {}, name)) {
+            process.stdout.write(name);
+            return;
+        }
+
+        const profile = manifest.dsh?.profile;
+        if (profile?.bundles?.includes(name)) {
+            profile.bundles = profile.bundles.filter(bundle => bundle !== name);
+            await saveManifest(dir, manifest);
+        }
+    });
+')
+if [ -n "$legacy_custom_bundle" ]; then
+    node /app/apps/cli/lib/bin.js plugin --profile web remove "$legacy_custom_bundle" --config.offline=true
+fi
 
 cd /workspace
+export DSH_WEB_CUSTOM_DEPLOYMENT_MANAGED=1
 # The browse picker uses HOME. Keep shared agent configuration in the login home.
 DSH_AGENTS_HOME="${DSH_AGENTS_HOME:-$HOME/.agents}" HOME="$web_home" exec node /app/apps/cli/lib/bin.js web \
     --patch /etc/dsh/browser-picker.patch.yml \
+    --patch /app/local-plugins/dsh-web-custom/auth.patch.yml \
+    --patch /app/local-plugins/dsh-web-custom/ui.patch.yml \
     --host "$bind_host" --port 3080 --no-open \
     --public-url "$DSH_PUBLIC_URL" --trusted-host "$public_authority"

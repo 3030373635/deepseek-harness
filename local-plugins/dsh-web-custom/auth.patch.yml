@@ -21,8 +21,9 @@
 
 - insert:
     - id: web-password-login
-      name: dsh-web-custom
+      name: ./lib/index.js
       inject: [profileContext, webStartup]
       config:
         databasePath: !!js "ctx.profileContext.home + '/auth/users.sqlite'"
         secureCookies: !!js "ctx.webStartup.tls !== undefined || ctx.webStartup.publicUrl?.startsWith('https://') === true"
+        deploymentManaged: !!js "process.env.DSH_WEB_CUSTOM_DEPLOYMENT_MANAGED === '1'"

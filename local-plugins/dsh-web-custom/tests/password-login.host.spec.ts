@@ -37,15 +37,14 @@ async function start(trustedHosts: string[] = []) {
   await context.plugin(WebServer, WebServer.Config({ host: '127.0.0.1', port: 0 })).await()
   await context.plugin(Connection, { trustedHosts }).await()
   const databasePath = join(directory, 'users.sqlite')
-  const config = Authentication.Config({
+  await context.plugin(Authentication, {
     databasePath,
     secureCookies: false,
     sessionSeconds: 8 * 3600,
     captchaSeconds,
     captchaCapacity: 256,
     concurrentPasswordChecks: 4,
-  })
-  await context.plugin(Authentication, config).await()
+  }).await()
   const server = context.webServer
   const resource = async (): Promise<Response> => new Response('app')
   context.effect(() => server.register({ kind: 'exact', path: '/', resource }))

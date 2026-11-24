@@ -2,7 +2,7 @@
 import { createHash, randomBytes } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context, Volatile } from '@deepseek-ai/cordis'
 import type { ConnectionTrustRequest } from '@deepseek-ai/dsh-client-connection'
 import type {} from '@deepseek-ai/dsh-host-webserver'
 import z from '@deepseek-ai/schemastery'
@@ -32,16 +32,19 @@ export interface PasswordLoginConfig {
   captchaCapacity: number
   /** Maximum concurrent password checks per Host. */
   concurrentPasswordChecks: number
+  /** Show the deployment-managed entry in the browser's built-in plugin list. */
+  deploymentManaged: Volatile<boolean>
 }
 
 /** Validate the password provider's deployment settings. */
-export const Config: z<PasswordLoginConfig> = z.object({
+export const Config = z.object({
   databasePath: z.string().required(),
   secureCookies: z.boolean().default(true),
   sessionSeconds: z.natural().min(1).max(7 * 86400).default(8 * 3600),
   captchaSeconds: z.natural().min(1).max(900).default(180),
   captchaCapacity: z.natural().min(1).default(256),
   concurrentPasswordChecks: z.natural().min(1).default(4),
+  deploymentManaged: z.boolean().default(false).volatile(),
 })
 
 const sessionPath = '/auth/sessions'
