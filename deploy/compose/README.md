@@ -26,7 +26,7 @@ Run the customized Web application on a Linux server and access it over LAN HTTP
 
 Prepare the server and its LAN address before starting the service. Docker builds the Linux dependencies inside the image; a host Node.js installation is unnecessary.
 
-- Install Docker Engine and Docker Compose v2 with BuildKit support. The build needs access to the Node image, Debian packages, the configured npm registry, and PyPI.
+- Install Docker Engine and Docker Compose v2 with BuildKit support. The build needs access to the Node image, Debian packages, the configured npm registry, PyPI, and the Playwright browser download CDN.
 - Use a trusted LAN: HTTP does not encrypt passwords or session cookies. Publish the service on the server’s LAN IP.
 - Provide an enforced Landlock backend or a usable bubblewrap backend for restricted shell commands. Compiling the launcher does not add missing kernel capabilities.
 
@@ -62,6 +62,8 @@ Place projects under `volumes/data/workspace/`, or change its bind-mount source 
 Agent commands can run `python` or `python3` with the preinstalled libraries to work with Word, Excel, PowerPoint, PDF, and images, analyze data, and parse HTML and XML. Edit [requirements.txt](requirements.txt) and rebuild the image to change those libraries.
 
 Use `soffice --headless --convert-to pdf example.docx` inside the container to convert an Office document to PDF. Run the command from a writable directory to save the PDF there.
+
+The image includes the `playwright-cli` command and its Chromium browser for headless browser automation.
 
 On first entry, an installation with no registered workspaces or session history automatically creates `/workspace/deepseek-harness/default-workspace`. The Docker overlay sets `workspace-controller.config.documentsDirectory` to `/workspace`, so creation does not require a system Documents directory. The runtime UID/GID must have write access to the mounted directory.
 

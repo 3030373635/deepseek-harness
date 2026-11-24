@@ -26,7 +26,7 @@ description: "通过 Docker Compose、局域网 HTTP 和持久化数据，在 Li
 
 启动服务前准备好服务器及其局域网地址。Docker 在镜像内构建 Linux 依赖，宿主机不需要安装 Node.js。
 
-- 安装支持 BuildKit 的 Docker Engine 和 Docker Compose v2。构建需要访问 Node 镜像、Debian 软件包、所配置的 npm 仓库以及 PyPI。
+- 安装支持 BuildKit 的 Docker Engine 和 Docker Compose v2。构建需要访问 Node 镜像、Debian 软件包、所配置的 npm 仓库、PyPI 和 Playwright 浏览器下载 CDN。
 - 使用可信局域网：HTTP 不加密密码和会话 Cookie。将服务发布到服务器的局域网 IP。
 - 为受限 Shell 命令提供能实际执行限制的 Landlock 后端或可用的 bubblewrap 后端。编译启动器无法补足内核缺失的能力。
 
@@ -62,6 +62,8 @@ docker compose up -d --wait
 Agent 命令可通过 `python` 或 `python3` 使用预装库处理 Word、Excel、PowerPoint、PDF 和图片，分析数据，以及解析 HTML 和 XML。要调整这些库，编辑 [requirements.txt](requirements.txt) 并重新构建镜像。
 
 在容器内运行 `soffice --headless --convert-to pdf example.docx` 可将 Office 文档转为 PDF。在可写目录运行这条命令，PDF 会保存到该目录。
+
+镜像内置 `playwright-cli` 命令及其 Chromium 浏览器，可执行无头浏览器自动化任务。
 
 首次进入时，没有已登记工作区和会话历史的安装会自动创建 `/workspace/deepseek-harness/default-workspace`。Docker overlay 将 `workspace-controller.config.documentsDirectory` 设置为 `/workspace`，因此创建不依赖系统 Documents 目录。运行时 UID/GID 必须对挂载目录有写权限。
 

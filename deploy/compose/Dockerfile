@@ -10,6 +10,13 @@ RUN apt-get update \
         python3-venv \
     && rm -rf /var/lib/apt/lists/*
 
+ARG NPM_REGISTRY=https://registry.npmjs.org
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
+    PLAYWRIGHT_MCP_BROWSER=chromium
+RUN npm install --global @playwright/cli@0.1.25 playwright@1.66.0-alpha-2026-11-18 --registry="$NPM_REGISTRY" \
+    && playwright install --with-deps chromium \
+    && rm -rf /var/lib/apt/lists/*
+
 ENV CI=true \
     ELECTRON_SKIP_BINARY_DOWNLOAD=1 \
     PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
@@ -17,7 +24,6 @@ ENV CI=true \
 
 WORKDIR /app
 COPY package.json ./
-ARG NPM_REGISTRY=https://registry.npmjs.org
 RUN npm install --global "$(node -p 'require("./package.json").packageManager')" --registry="$NPM_REGISTRY"
 
 COPY . ./
