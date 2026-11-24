@@ -50,7 +50,9 @@ pnpm dsh web
 
 ## 配置
 
-组合包依次加载 [认证补丁](auth.patch.yml)和[界面补丁](ui.patch.yml)。要恢复点赞、点踩和反馈弹窗，在 Web profile 的 `cordis.patch.yml` 中覆盖：
+组合包依次加载 [认证补丁](auth.patch.yml)和[界面补丁](ui.patch.yml)。认证补丁停用「设置 → 远程连接」、二维码登录和设备配对。通过浏览器访问 Web 时使用本地密码登录。
+
+要恢复点赞、点踩和反馈弹窗，在 Web profile 的 `cordis.patch.yml` 中覆盖：
 
 ```yaml
 - id: ui-message-feedback
@@ -60,6 +62,8 @@ pnpm dsh web
 带正文的 `/feedback <内容>` 仍可提交会话反馈。
 
 组合包通过 `ui-settings-models.config.credentialOnboarding: false` 关闭 API Key 自动引导。API Key 可在「设置 → 模型」中配置。要恢复自动引导，在 Web profile 的 `cordis.patch.yml` 中把该字段覆盖为 `true`。
+
+组合包默认关闭向 DeepSeek 官方 API 上传会话日志。如需开启，在「设置 → 通用」中打开「在使用官方模型 API 时上传 Session Log」。
 
 组合包根据 Web 入口的 TLS 或 HTTPS 公共地址设置 Secure Cookie。HTTP 也支持 DSH 受信任 Host 策略接受的局域网地址。注册、登录和退出均要求浏览器 Origin 与 Cookie audience 一致。Cookie 使用 HttpOnly 和 SameSite=Strict。HTTP 不加密密码和会话 Cookie，因此只用于可信局域网。
 

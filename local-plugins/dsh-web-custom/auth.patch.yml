@@ -1,5 +1,7 @@
 - id: authentication-token
   disabled: true
+- id: remote-connection
+  disabled: true
 
 # Stop the original login service from releasing saved account grants to models and Web tools.
 - id: deepseek-account
@@ -12,6 +14,10 @@
   disabled: true
 - id: ui-account-notifications
   disabled: true
+
+- id: session-log-deepseek
+  config:
+    enabled: false
 
 - insert:
     - id: web-password-login

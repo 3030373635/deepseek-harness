@@ -50,7 +50,9 @@ pnpm dsh web
 
 ## Configuration
 
-The composition bundle loads the [authentication patch](auth.patch.yml) followed by the [interface patch](ui.patch.yml). To restore likes, dislikes, and feedback dialogs, override the following entry in the Web profile’s `cordis.patch.yml`:
+The composition bundle loads the [authentication patch](auth.patch.yml) followed by the [interface patch](ui.patch.yml). The authentication patch disables **Settings → Remote connection**, QR-code sign-in, and device pairing. Use the local password login to access Web from a browser.
+
+To restore likes, dislikes, and feedback dialogs, override the following entry in the Web profile’s `cordis.patch.yml`:
 
 ```yaml
 - id: ui-message-feedback
@@ -60,6 +62,8 @@ The composition bundle loads the [authentication patch](auth.patch.yml) followed
 The `/feedback <content>` command can still submit conversation feedback when it includes a message.
 
 The bundle disables automatic API-key onboarding through `ui-settings-models.config.credentialOnboarding: false`. Configure API keys in **Settings → Models**. To restore automatic onboarding, override this field with `true` in the Web profile’s `cordis.patch.yml`.
+
+The bundle disables Session-log uploads to the official DeepSeek API by default. To opt in, turn on **Upload Session Log when using the official model API** under **Settings → General**.
 
 The composition bundle sets Secure cookies according to the Web entry’s TLS configuration or public HTTPS URL. HTTP also supports LAN addresses admitted by DSH’s trusted-host policy. Registration, sign-in, and sign-out require the browser origin to match the cookie audience. Cookies are HttpOnly and SameSite=Strict. HTTP does not encrypt passwords or session cookies, so use it only on a trusted LAN.
 
