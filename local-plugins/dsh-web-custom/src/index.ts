@@ -8,7 +8,7 @@ import type {} from '@deepseek-ai/dsh-host-webserver'
 import z from '@deepseek-ai/schemastery'
 import { createCaptchaCode, renderCaptcha } from './captcha.ts'
 import { renderAuthPage } from './page.ts'
-import { currentSessionPath, loginPath, registrationPath } from './routes.ts'
+import { currentSessionPath, loginPath, registrationPath, type SignInErrorCode } from './routes.ts'
 import { initializeSessionKey, issueSession, readSession } from './session.ts'
 import { insertFirstUser, openUsers, prepareUser, verifyUser } from './users.ts'
 
@@ -150,6 +150,15 @@ async function readForm(request: IncomingMessage): Promise<URLSearchParams | und
 function reply(response: ServerResponse, status: number, headers: Record<string, string> = {}, body?: string | Buffer): void {
   response.writeHead(status, { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', ...headers })
   response.end(body)
+}
+
+/**
+ * Return the sign-in failure code that selects the browser's localized message.
+ * @param response - active HTTP response.
+ * @param code - rejected verification challenge or credentials.
+ */
+function replySignInError(response: ServerResponse, code: SignInErrorCode): void {
+  reply(response, 401, { 'content-type': 'application/json; charset=utf-8' }, JSON.stringify({ code }))
 }
 
 /**
@@ -351,9 +360,12 @@ export async function apply(ctx: Context, config: PasswordLoginConfig): Promise<
         const password = fields?.get('password')
         if (request.destroyed && !request.complete) return
         if (!canSignIn()) { reply(response, 503); return }
-        if (challenge === undefined || challenge.expiry <= Date.now() || fields?.get('captcha') !== challenge.code
-          || !username || username.length > 80 || !password || Buffer.byteLength(password) > 1024) {
-          reply(response, 401)
+        if (challenge === undefined || challenge.expiry <= Date.now() || fields?.get('captcha') !== challenge.code) {
+          replySignInError(response, 'INVALID_CAPTCHA')
+          return
+        }
+        if (!username || username.length > 80 || !password || Buffer.byteLength(password) > 1024) {
+          replySignInError(response, 'INVALID_CREDENTIALS')
           return
         }
         if (checksInProgress >= config.concurrentPasswordChecks) {
@@ -365,7 +377,7 @@ export async function apply(ctx: Context, config: PasswordLoginConfig): Promise<
           const id = await verifyUser(users, username, password)
           if (!canSignIn()) { reply(response, 503); return }
           if (id === undefined || userById.get(id) === undefined) {
-            reply(response, 401)
+            replySignInError(response, 'INVALID_CREDENTIALS')
             return
           }
           replySessionCreated(response, id, origin)

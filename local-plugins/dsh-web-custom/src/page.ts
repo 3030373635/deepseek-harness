@@ -1,5 +1,5 @@
 /** Standalone Web entry document, served before the authenticated client boots. */
-import { loginPath, registrationPath } from './routes.ts'
+import { loginPath, registrationPath, type SignInErrorCode } from './routes.ts'
 import { minimumPasswordLength } from './users.ts'
 
 const messages = {
@@ -27,7 +27,10 @@ const messages = {
     refreshed: 'Verification image updated',
     loading: 'Loading verification image…',
     pending: 'Signing in…',
-    invalid: 'Check your username, password, and verification code.',
+    signInErrors: {
+      INVALID_CREDENTIALS: 'Incorrect username or password.',
+      INVALID_CAPTCHA: 'Incorrect or expired verification code. Enter the new code.',
+    } satisfies Record<SignInErrorCode, string>,
     unavailable: 'Sign-in is temporarily unavailable. Try again.',
     imageError: 'The verification image could not load. Request a new image.',
     registration: {
@@ -67,7 +70,10 @@ const messages = {
     refreshed: '验证码已更新',
     loading: '正在加载验证码…',
     pending: '正在登录…',
-    invalid: '请检查用户名、密码和验证码',
+    signInErrors: {
+      INVALID_CREDENTIALS: '用户名或密码不正确',
+      INVALID_CAPTCHA: '验证码错误或已失效，请输入新验证码',
+    } satisfies Record<SignInErrorCode, string>,
     unavailable: '暂时无法登录，请重试',
     imageError: '验证码图片加载失败，请换一张',
     registration: {
@@ -408,7 +414,11 @@ export function renderAuthPage(language: string | undefined, nonce: string, mode
             window.location.replace('/')
             return
           }
-          error.textContent = response.status === 401 ? text.invalid : text.unavailable
+          const failure = response.status === 401 ? await response.json() : undefined
+          const code = failure?.code
+          error.textContent = typeof code === 'string' && Object.hasOwn(text.signInErrors, code)
+            ? text.signInErrors[code]
+            : text.unavailable
         } catch (errorSigningIn) {
           // The outcome is unavailable; only a successful response admits the app.
           error.textContent = text.unavailable

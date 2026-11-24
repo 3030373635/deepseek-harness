@@ -30,17 +30,20 @@ it('shows the length hint on both registration password fields and toggles visib
 
 /**
  * Mount the real login document with instance-local image and HTTP adapters.
+ * @param signInResponse - response for a submitted login form.
  * @returns the document and controls for delaying or failing challenge requests.
  */
-async function startPage() {
-  let response = Promise.resolve(new Response(new Blob(['initial image'])))
+async function startPage(signInResponse?: Response) {
+  let response: Promise<Response> | undefined
   let decoding = Promise.resolve()
   let imageNumber = 0
   const page = new JSDOM(renderAuthPage('zh-CN', 'test-nonce', 'login'), {
     url: 'http://localhost',
     runScripts: 'dangerously',
     beforeParse(window) {
-      window.fetch = () => response
+      window.fetch = async input => String(input).endsWith('/auth/sessions') && signInResponse
+        ? signInResponse
+        : response ?? new Response(new Blob(['verification image']))
       window.URL.createObjectURL = () => `blob:test-${++imageNumber}`
       window.URL.revokeObjectURL = () => {}
       window.HTMLImageElement.prototype.decode = () => decoding
@@ -66,6 +69,28 @@ async function startPage() {
     },
   }
 }
+
+it.each([
+  ['INVALID_CREDENTIALS', '用户名或密码不正确'],
+  ['INVALID_CAPTCHA', '验证码错误或已失效，请输入新验证码'],
+])('shows the sign-in message for %s after replacing the verification image', async (code, message) => {
+  const { page, image, submit, error } = await startPage(Response.json({ code }, { status: 401 }))
+  const document = page.window.document
+  const username = document.querySelector<HTMLInputElement>('#username')!
+  const password = document.querySelector<HTMLInputElement>('#password')!
+  const captcha = document.querySelector<HTMLInputElement>('#captcha')!
+  const originalImage = image.getAttribute('src')
+  username.value = 'operator'
+  password.value = 'test password'
+  captcha.value = '0123'
+  submit.click()
+
+  await vi.waitFor(() => expect(submit.disabled).toBe(false))
+  expect(error.textContent).toBe(message)
+  expect(error.getAttribute('data-state')).toBe('error')
+  expect(image.getAttribute('src')).not.toBe(originalImage)
+  expect(captcha.value).toBe('')
+})
 
 it('keeps the current image, login appearance, and status until the replacement decodes', async () => {
   const { page, image, refresh, submit, error, next } = await startPage()

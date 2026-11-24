@@ -12,6 +12,8 @@ import * as Captcha from '../src/captcha.ts'
 import * as Users from '../src/users.ts'
 import { RecordCredentials } from './browser-credentials.ts'
 
+const captchaSeconds = 180
+
 let context: Context | undefined
 let directory: string | undefined
 
@@ -39,7 +41,7 @@ async function start(trustedHosts: string[] = []) {
     databasePath,
     secureCookies: false,
     sessionSeconds: 8 * 3600,
-    captchaSeconds: 180,
+    captchaSeconds,
     captchaCapacity: 256,
     concurrentPasswordChecks: 4,
   })
@@ -286,20 +288,41 @@ it('consumes a CAPTCHA on the first attempt and admits only the signed session c
    * Submit a browser login attempt.
    * @param cookie - issued CAPTCHA cookie.
    * @param captcha - challenge answer submitted by the browser.
+   * @param password - submitted password.
+   * @param username - submitted account name.
    * @returns the HTTP response from DSH.
    */
-  function login(cookie: string, captcha: string, password = 'test-only password'): Promise<Response> {
+  function login(cookie: string, captcha: string, password = 'test-only password', username = 'operator'): Promise<Response> {
     return fetch(`${origin}/auth/sessions`, {
-      method: 'POST', headers: { origin, cookie }, body: new URLSearchParams({ username: 'operator', password, captcha }),
+      method: 'POST', headers: { origin, cookie }, body: new URLSearchParams({ username, password, captcha }),
     })
   }
 
   const used = await challenge()
-  expect((await login(used, '0000')).status).toBe(401)
-  expect((await login(used, '0123')).status).toBe(401)
+  const wrongCode = await login(used, '0000', 'incorrect', 'missing')
+  expect(wrongCode.status).toBe(401)
+  expect(await wrongCode.json()).toEqual({ code: 'INVALID_CAPTCHA' })
+  const reusedCode = await login(used, '0123')
+  expect(reusedCode.status).toBe(401)
+  expect(await reusedCode.json()).toEqual({ code: 'INVALID_CAPTCHA' })
   expect((await login(await challenge(), '00123')).status).toBe(401)
   expect((await login(await challenge(), '123')).status).toBe(401)
-  expect((await login(await challenge(), '0123', 'incorrect')).status).toBe(401)
+  const expired = await challenge()
+  const expiredAt = Date.now() + captchaSeconds * 1000
+  const clock = vi.spyOn(Date, 'now').mockReturnValue(expiredAt)
+  try {
+    const expiredCode = await login(expired, '0123')
+    expect(expiredCode.status).toBe(401)
+    expect(await expiredCode.json()).toEqual({ code: 'INVALID_CAPTCHA' })
+  } finally {
+    clock.mockRestore()
+  }
+  for (const username of ['operator', 'missing']) {
+    const rejected = await login(await challenge(), '0123', 'incorrect', username)
+    expect(rejected.status).toBe(401)
+    expect(rejected.headers.get('set-cookie')).toBeNull()
+    expect(await rejected.json()).toEqual({ code: 'INVALID_CREDENTIALS' })
+  }
   const signedIn = await login(await challenge(), '0123')
   expect(signedIn.status).toBe(201)
   const setCookie = signedIn.headers.get('set-cookie')

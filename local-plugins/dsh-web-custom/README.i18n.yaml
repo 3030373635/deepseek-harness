@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write local-plugins/dsh-web-custom/README.md
 /dsh-web-customization:
-  en: b713cfbc83240ce6
-  zh: 755c2192ec78382e
+  en: c178554e22cd6bf6
+  zh: 3aec174fa30006b7
 /dsh-web-customization/build-and-install:
   en: 03345b42fb25bf0f
   zh: 422c20c506c3c9c3
