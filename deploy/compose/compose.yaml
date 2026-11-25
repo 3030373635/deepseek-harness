@@ -15,6 +15,8 @@ services:
       DSH_UID: ${DSH_UID:-1000}
       DSH_GID: ${DSH_GID:-1000}
       DSH_WEB_HOME: ${DSH_WEB_HOME:-}
+      XDG_CACHE_HOME: /tmp/dsh-xdg/cache
+      XDG_CONFIG_HOME: /tmp/dsh-xdg/config
     ports:
       - "${DSH_BIND_ADDRESS:?Set DSH_BIND_ADDRESS in .env}:${DSH_HTTP_PORT:-3080}:3080"
     volumes:
